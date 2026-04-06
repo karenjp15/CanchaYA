@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { resolvePostAuthPath } from "@/lib/auth/profile";
 import { safeInternalPath } from "@/lib/auth/paths";
+import { agentLog } from "@/lib/debug-agent-log";
 import { loginSchema, registerSchema } from "@/lib/schemas/auth";
 import { redirect } from "next/navigation";
 
@@ -21,11 +22,33 @@ export async function signInWithPassword(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  // #region agent log
+  agentLog({
+    location: "auth.ts:signInWithPassword:entry",
+    message: "signInWithPassword started",
+    hypothesisId: "A",
+    data: {
+      hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      hasAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      hasSiteUrl: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+      nodeEnv: process.env.NODE_ENV,
+    },
+  });
+  // #endregion
+
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
   if (!parsed.success) {
+    // #region agent log
+    agentLog({
+      location: "auth.ts:signInWithPassword:validation",
+      message: "login validation failed",
+      hypothesisId: "B",
+      data: { issues: parsed.error.issues.length },
+    });
+    // #endregion
     return {
       error:
         parsed.error.flatten().fieldErrors.email?.[0]
@@ -34,13 +57,38 @@ export async function signInWithPassword(
     };
   }
 
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch (e) {
+    // #region agent log
+    agentLog({
+      location: "auth.ts:signInWithPassword:createClient",
+      message: "createClient threw",
+      hypothesisId: "A",
+      data: { err: String(e) },
+    });
+    // #endregion
+    throw e;
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
   });
 
   if (error) {
+    // #region agent log
+    agentLog({
+      location: "auth.ts:signInWithPassword:signInError",
+      message: "signInWithPassword supabase error",
+      hypothesisId: "B",
+      data: {
+        code: error.code ?? "none",
+        msg: error.message,
+      },
+    });
+    // #endregion
     return {
       error:
         error.message === "Invalid login credentials"
@@ -52,6 +100,14 @@ export async function signInWithPassword(
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  // #region agent log
+  agentLog({
+    location: "auth.ts:signInWithPassword:afterGetUser",
+    message: "post signIn getUser",
+    hypothesisId: "C",
+    data: { hasUser: Boolean(user), userId: user?.id ? "present" : "absent" },
+  });
+  // #endregion
   if (!user) return { error: "No se pudo iniciar sesión" };
 
   const rawNext = formData.get("next");
@@ -59,6 +115,17 @@ export async function signInWithPassword(
     user.id,
     typeof rawNext === "string" ? rawNext : null,
   );
+  // #region agent log
+  agentLog({
+    location: "auth.ts:signInWithPassword:redirect",
+    message: "redirecting after login",
+    hypothesisId: "D",
+    data: {
+      path,
+      hasNext: typeof rawNext === "string" && rawNext.trim().length > 0,
+    },
+  });
+  // #endregion
   redirect(path);
 }
 

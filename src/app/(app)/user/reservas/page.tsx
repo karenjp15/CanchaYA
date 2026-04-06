@@ -16,10 +16,12 @@ export default async function MisReservasPage() {
   const { upcoming, history } = await getBookingsByUser(user.id);
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold">Mis reservas</h1>
-      <Tabs defaultValue="upcoming">
-        <TabsList>
+    <div className="mx-auto w-full max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
+      <h1 className="mb-4 text-xl font-semibold sm:mb-6 sm:text-2xl">
+        Mis reservas
+      </h1>
+      <Tabs defaultValue="upcoming" className="w-full min-w-0">
+        <TabsList className="h-auto min-h-8 w-full max-w-full flex-wrap justify-start gap-1 p-1">
           <TabsTrigger value="upcoming">
             Próximas ({upcoming.length})
           </TabsTrigger>

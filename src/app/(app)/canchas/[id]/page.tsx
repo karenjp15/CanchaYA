@@ -10,7 +10,7 @@ export default async function CanchaDetailPage({ params }: Props) {
   if (!field) notFound();
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8">
+    <div className="mx-auto w-full max-w-5xl px-3 py-6 sm:px-4 sm:py-8">
       <BookingFlow field={field} />
     </div>
   );

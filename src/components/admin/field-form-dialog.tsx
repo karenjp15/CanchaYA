@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
+import Image from "next/image";
 import { createField, updateField, type FieldActionState } from "@/actions/admin-fields";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +21,14 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Plus, Pencil } from "lucide-react";
-import type { Field as FieldRow } from "@/lib/data/fields";
+import { Plus, Pencil, Upload, X } from "lucide-react";
+import type { Field as FieldRow } from "@/lib/data/field-model";
+import type { Venue } from "@/lib/data/venues";
 
 type Props = {
   mode: "create" | "edit";
   field?: FieldRow;
+  venues: Venue[];
 };
 
 const FIELD_TYPES = ["F5", "F6", "F7", "F8", "F11"] as const;
@@ -36,10 +39,26 @@ const SURFACES = [
 
 const initial: FieldActionState = {};
 
-export function FieldFormDialog({ mode, field }: Props) {
+export function FieldFormDialog({ mode, field, venues }: Props) {
   const action = mode === "create" ? createField : updateField;
   const [state, formAction, pending] = useActionState(action, initial);
   const [open, setOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    field?.image_url ?? null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+  }
+
+  function clearImage() {
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -63,7 +82,7 @@ export function FieldFormDialog({ mode, field }: Props) {
           </DialogTitle>
           <DialogDescription>
             {mode === "create"
-              ? "Agrega una nueva cancha a tu establecimiento"
+              ? "Elige el local y define tipo, superficie y precio de esta cancha."
               : `Editando: ${field?.name}`}
           </DialogDescription>
         </DialogHeader>
@@ -85,26 +104,41 @@ export function FieldFormDialog({ mode, field }: Props) {
           )}
 
           <FieldGroup>
+            {mode === "create" && (
+              <Field>
+                <FieldLabel htmlFor="af-venue">Local</FieldLabel>
+                <FieldContent>
+                  <select
+                    id="af-venue"
+                    name="venueId"
+                    required
+                    className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+                    defaultValue={venues[0]?.id ?? ""}
+                  >
+                    {venues.length === 0 ? (
+                      <option value="">Crea un local primero</option>
+                    ) : (
+                      venues.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name}
+                          {v.address ? ` — ${v.address}` : ""}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </FieldContent>
+              </Field>
+            )}
+
             <Field>
-              <FieldLabel htmlFor="af-name">Nombre</FieldLabel>
+              <FieldLabel htmlFor="af-name">Nombre de la cancha</FieldLabel>
               <FieldContent>
                 <Input
                   id="af-name"
                   name="name"
                   required
+                  placeholder="Ej. Cancha sintética F6"
                   defaultValue={field?.name ?? ""}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="af-address">Dirección</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="af-address"
-                  name="address"
-                  required
-                  defaultValue={field?.address ?? ""}
                 />
               </FieldContent>
             </Field>
@@ -112,9 +146,60 @@ export function FieldFormDialog({ mode, field }: Props) {
             <Field>
               <FieldLabel htmlFor="af-desc">Descripción</FieldLabel>
               <FieldContent>
-                <Input id="af-desc" name="description" />
+                <Input
+                  id="af-desc"
+                  name="description"
+                  defaultValue={field?.description ?? ""}
+                />
               </FieldContent>
             </Field>
+
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Foto de la cancha</span>
+              {imagePreview ? (
+                <div className="relative h-36 w-full overflow-hidden rounded-lg border border-border">
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                    unoptimized={imagePreview.startsWith("blob:")}
+                  />
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/50">
+                  <Upload className="size-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    Haz clic para subir imagen (JPG, PNG, WebP — máx 5 MB)
+                  </span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    name="image"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="sr-only"
+                  />
+                </label>
+              )}
+              {imagePreview && (
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  name="image"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="sr-only"
+                />
+              )}
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -182,71 +267,15 @@ export function FieldFormDialog({ mode, field }: Props) {
                 />
               </FieldContent>
             </Field>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <span className="text-sm font-medium">Parqueadero</span>
-                <div className="flex gap-2">
-                  {[
-                    { v: "true", l: "Sí" },
-                    { v: "false", l: "No" },
-                  ].map((o) => (
-                    <label
-                      key={o.v}
-                      className={cn(
-                        "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-1.5 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="parkingAvailable"
-                        value={o.v}
-                        defaultChecked={
-                          field
-                            ? String(field.parking_available) === o.v
-                            : o.v === "false"
-                        }
-                        className="sr-only"
-                      />
-                      {o.l}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <span className="text-sm font-medium">Venta de licor</span>
-                <div className="flex gap-2">
-                  {[
-                    { v: "true", l: "Sí" },
-                    { v: "false", l: "No" },
-                  ].map((o) => (
-                    <label
-                      key={o.v}
-                      className={cn(
-                        "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-1.5 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="sellsLiquor"
-                        value={o.v}
-                        defaultChecked={
-                          field
-                            ? String(field.sells_liquor) === o.v
-                            : o.v === "false"
-                        }
-                        className="sr-only"
-                      />
-                      {o.l}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
           </FieldGroup>
 
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button
+              type="submit"
+              disabled={
+                pending || (mode === "create" && venues.length === 0)
+              }
+            >
               {pending
                 ? "Guardando…"
                 : mode === "create"

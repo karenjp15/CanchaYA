@@ -24,7 +24,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const totalPrice = Number(field.hourly_price) * 2;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8">
+    <div className="mx-auto w-full max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
       <CheckoutForm
         fieldId={field.id}
         fieldName={field.name}

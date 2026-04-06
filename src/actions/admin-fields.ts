@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { fieldFormSchema } from "@/lib/schemas/field";
+import { fieldCreateSchema, fieldUpdateSchema } from "@/lib/schemas/field";
 import { revalidatePath } from "next/cache";
 
 export type FieldActionState = {
@@ -9,19 +9,38 @@ export type FieldActionState = {
   message?: string;
 };
 
+async function uploadFieldImage(
+  fieldId: string,
+  file: File,
+): Promise<string | null> {
+  const supabase = await createClient();
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${fieldId}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("field-images")
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if (error) return null;
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("field-images").getPublicUrl(path);
+
+  return publicUrl;
+}
+
 export async function createField(
   _prev: FieldActionState,
   formData: FormData,
 ): Promise<FieldActionState> {
-  const parsed = fieldFormSchema.safeParse({
+  const parsed = fieldCreateSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     fieldType: formData.get("fieldType"),
     surface: formData.get("surface"),
     hourlyPrice: formData.get("hourlyPrice"),
-    address: formData.get("address"),
-    parkingAvailable: formData.get("parkingAvailable") === "true",
-    sellsLiquor: formData.get("sellsLiquor") === "true",
+    venueId: formData.get("venueId"),
   });
 
   if (!parsed.success) {
@@ -35,21 +54,45 @@ export async function createField(
   } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado" };
 
-  const { error } = await supabase.from("fields").insert({
-    owner_id: user.id,
-    name: parsed.data.name,
-    description: parsed.data.description ?? null,
-    field_type: parsed.data.fieldType,
-    surface: parsed.data.surface,
-    hourly_price: parsed.data.hourlyPrice.toFixed(2),
-    address: parsed.data.address,
-    parking_available: parsed.data.parkingAvailable,
-    sells_liquor: parsed.data.sellsLiquor,
-  });
+  const { data: venue, error: vErr } = await supabase
+    .from("venues")
+    .select("id, owner_id")
+    .eq("id", parsed.data.venueId)
+    .single();
 
-  if (error) return { error: error.message };
+  if (vErr || !venue || venue.owner_id !== user.id) {
+    return { error: "Local no válido o no te pertenece" };
+  }
+
+  const { data: inserted, error } = await supabase
+    .from("fields")
+    .insert({
+      owner_id: user.id,
+      venue_id: parsed.data.venueId,
+      name: parsed.data.name,
+      description: parsed.data.description ?? null,
+      field_type: parsed.data.fieldType,
+      surface: parsed.data.surface,
+      hourly_price: parsed.data.hourlyPrice.toFixed(2),
+    })
+    .select("id")
+    .single();
+
+  if (error || !inserted) return { error: error?.message ?? "Error al crear" };
+
+  const imageFile = formData.get("image") as File | null;
+  if (imageFile && imageFile.size > 0) {
+    const imageUrl = await uploadFieldImage(inserted.id, imageFile);
+    if (imageUrl) {
+      await supabase
+        .from("fields")
+        .update({ image_url: imageUrl })
+        .eq("id", inserted.id);
+    }
+  }
 
   revalidatePath("/admin/canchas");
+  revalidatePath("/explorar");
   return { message: "Cancha creada exitosamente" };
 }
 
@@ -60,15 +103,12 @@ export async function updateField(
   const fieldId = formData.get("fieldId") as string;
   if (!fieldId) return { error: "ID de cancha requerido" };
 
-  const parsed = fieldFormSchema.safeParse({
+  const parsed = fieldUpdateSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     fieldType: formData.get("fieldType"),
     surface: formData.get("surface"),
     hourlyPrice: formData.get("hourlyPrice"),
-    address: formData.get("address"),
-    parkingAvailable: formData.get("parkingAvailable") === "true",
-    sellsLiquor: formData.get("sellsLiquor") === "true",
   });
 
   if (!parsed.success) {
@@ -77,23 +117,32 @@ export async function updateField(
   }
 
   const supabase = await createClient();
+
+  const updateData: Record<string, unknown> = {
+    name: parsed.data.name,
+    description: parsed.data.description ?? null,
+    field_type: parsed.data.fieldType,
+    surface: parsed.data.surface,
+    hourly_price: parsed.data.hourlyPrice.toFixed(2),
+  };
+
+  const imageFile = formData.get("image") as File | null;
+  if (imageFile && imageFile.size > 0) {
+    const imageUrl = await uploadFieldImage(fieldId, imageFile);
+    if (imageUrl) {
+      updateData.image_url = imageUrl;
+    }
+  }
+
   const { error } = await supabase
     .from("fields")
-    .update({
-      name: parsed.data.name,
-      description: parsed.data.description ?? null,
-      field_type: parsed.data.fieldType,
-      surface: parsed.data.surface,
-      hourly_price: parsed.data.hourlyPrice.toFixed(2),
-      address: parsed.data.address,
-      parking_available: parsed.data.parkingAvailable,
-      sells_liquor: parsed.data.sellsLiquor,
-    })
+    .update(updateData)
     .eq("id", fieldId);
 
   if (error) return { error: error.message };
 
   revalidatePath("/admin/canchas");
+  revalidatePath("/explorar");
   return { message: "Cancha actualizada" };
 }
 

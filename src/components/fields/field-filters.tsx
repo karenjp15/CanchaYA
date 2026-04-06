@@ -30,9 +30,14 @@ export function FieldFilters() {
   );
 
   return (
-    <aside className="space-y-6">
+    <aside
+      className={cn(
+        "space-y-5 rounded-xl border border-border bg-card/60 p-4 shadow-sm backdrop-blur-sm",
+        "lg:space-y-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
+      )}
+    >
       <div>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Filtros
         </h3>
       </div>
@@ -49,7 +54,7 @@ export function FieldFilters() {
                 setParam("type", activeType === t ? null : t)
               }
               className={cn(
-                "min-w-[3.2rem]",
+                "min-w-[3rem] touch-manipulation",
                 activeType === t && "ring-2 ring-primary/30",
               )}
             >
@@ -59,43 +64,47 @@ export function FieldFilters() {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Parqueadero</p>
-        <div className="flex gap-2">
-          {["sí", "no"].map((v) => {
-            const val = v === "sí" ? "1" : "0";
-            const active = parking === val;
-            return (
-              <Button
-                key={v}
-                variant={active ? "default" : "outline"}
-                size="sm"
-                onClick={() => setParam("parking", active ? null : val)}
-              >
-                {v}
-              </Button>
-            );
-          })}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Parqueadero</p>
+          <div className="flex flex-wrap gap-2">
+            {["sí", "no"].map((v) => {
+              const val = v === "sí" ? "1" : "0";
+              const active = parking === val;
+              return (
+                <Button
+                  key={v}
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  className="touch-manipulation"
+                  onClick={() => setParam("parking", active ? null : val)}
+                >
+                  {v}
+                </Button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Venta de licor</p>
-        <div className="flex gap-2">
-          {["sí", "no"].map((v) => {
-            const val = v === "sí" ? "1" : "0";
-            const active = liquor === val;
-            return (
-              <Button
-                key={v}
-                variant={active ? "default" : "outline"}
-                size="sm"
-                onClick={() => setParam("liquor", active ? null : val)}
-              >
-                {v}
-              </Button>
-            );
-          })}
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Venta de licor</p>
+          <div className="flex flex-wrap gap-2">
+            {["sí", "no"].map((v) => {
+              const val = v === "sí" ? "1" : "0";
+              const active = liquor === val;
+              return (
+                <Button
+                  key={v}
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  className="touch-manipulation"
+                  onClick={() => setParam("liquor", active ? null : val)}
+                >
+                  {v}
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </aside>

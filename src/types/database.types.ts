@@ -53,22 +53,17 @@ export type Database = {
         };
         Relationships: [];
       };
-      fields: {
+      venues: {
         Row: {
           id: string;
           owner_id: string;
           name: string;
-          description: string | null;
-          field_type: FieldType;
-          surface: SurfaceType;
-          hourly_price: string;
-          is_active: boolean;
-          image_url: string | null;
           address: string | null;
           latitude: number | null;
           longitude: number | null;
           parking_available: boolean;
           sells_liquor: boolean;
+          is_active: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -76,17 +71,12 @@ export type Database = {
           id?: string;
           owner_id: string;
           name: string;
-          description?: string | null;
-          field_type: FieldType;
-          surface: SurfaceType;
-          hourly_price: string;
-          is_active?: boolean;
-          image_url?: string | null;
           address?: string | null;
           latitude?: number | null;
           longitude?: number | null;
           parking_available?: boolean;
           sells_liquor?: boolean;
+          is_active?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -94,17 +84,65 @@ export type Database = {
           id?: string;
           owner_id?: string;
           name?: string;
+          address?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          parking_available?: boolean;
+          sells_liquor?: boolean;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "venues_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fields: {
+        Row: {
+          id: string;
+          owner_id: string;
+          venue_id: string;
+          name: string;
+          description: string | null;
+          field_type: FieldType;
+          surface: SurfaceType;
+          hourly_price: string;
+          is_active: boolean;
+          image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          venue_id: string;
+          name: string;
+          description?: string | null;
+          field_type: FieldType;
+          surface: SurfaceType;
+          hourly_price: string;
+          is_active?: boolean;
+          image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          venue_id?: string;
+          name?: string;
           description?: string | null;
           field_type?: FieldType;
           surface?: SurfaceType;
           hourly_price?: string;
           is_active?: boolean;
           image_url?: string | null;
-          address?: string | null;
-          latitude?: number | null;
-          longitude?: number | null;
-          parking_available?: boolean;
-          sells_liquor?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -114,6 +152,13 @@ export type Database = {
             columns: ["owner_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fields_venue_id_fkey";
+            columns: ["venue_id"];
+            isOneToOne: false;
+            referencedRelation: "venues";
             referencedColumns: ["id"];
           },
         ];
@@ -198,7 +243,24 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_venues_visible_for_fields: {
+        Args: { p_ids: string[] };
+        Returns: {
+          id: string;
+          owner_id: string;
+          name: string;
+          address: string | null;
+          latitude: number | null;
+          longitude: number | null;
+          parking_available: boolean;
+          sells_liquor: boolean;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
+    };
     Enums: {
       user_role: UserRole;
       field_type: FieldType;

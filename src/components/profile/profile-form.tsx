@@ -45,7 +45,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[1fr_minmax(260px,320px)] lg:gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Mi perfil</CardTitle>

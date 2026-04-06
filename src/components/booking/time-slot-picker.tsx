@@ -37,7 +37,7 @@ export function TimeSlotPicker({
                 slot.available && !isSelected &&
                   "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
                 slot.available && isSelected &&
-                  "border-primary bg-primary/10 text-primary ring-1 ring-primary/30",
+                  "border-warning bg-warning/10 text-warning ring-1 ring-warning/30",
                 !slot.available &&
                   "cursor-not-allowed border-border/40 bg-destructive/5 text-muted-foreground/40 line-through",
               )}

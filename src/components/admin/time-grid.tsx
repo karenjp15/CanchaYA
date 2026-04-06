@@ -48,7 +48,7 @@ function statusColor(status: BookingStatus) {
     case "PAID":
       return "bg-primary/20 border-primary/40 text-primary hover:bg-primary/30";
     case "PENDING":
-      return "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/25";
+      return "bg-warning/15 border-warning/40 text-warning hover:bg-warning/25";
     case "CANCELLED":
       return "bg-destructive/10 border-destructive/30 text-destructive/70 line-through hover:bg-destructive/15";
   }
@@ -76,6 +76,8 @@ export function TimeGrid({ ownerId, initialBookings, onSelectBooking }: TimeGrid
 
   useEffect(() => {
     if (weekOffset === 0) {
+      // Sincronizar con props al volver a la semana actual
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset explícito a datos del servidor
       setBookings(initialBookings);
       return;
     }

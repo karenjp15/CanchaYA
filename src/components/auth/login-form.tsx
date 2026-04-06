@@ -153,7 +153,7 @@ export function LoginForm({ nextPath, urlError }: LoginFormProps) {
       <CardFooter className="flex justify-center border-t-0 pt-0">
         <p className="text-sm text-muted-foreground">
           ¿No tienes cuenta?{" "}
-          <Link href="/register" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link href="/register" className="font-medium text-warning underline-offset-4 hover:underline">
             Registrarme
           </Link>
         </p>

@@ -4,17 +4,17 @@ import { cn } from "@/lib/utils";
 
 const CONFIG: Record<
   BookingStatus,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  { label: string; cls: string }
 > = {
-  PENDING: { label: "Pendiente", variant: "secondary" },
-  PAID: { label: "Confirmada", variant: "default" },
-  CANCELLED: { label: "Cancelada", variant: "destructive" },
+  PENDING: { label: "Pendiente", cls: "bg-warning/15 text-warning border-warning/30" },
+  PAID: { label: "Confirmada", cls: "bg-primary/15 text-primary border-primary/30" },
+  CANCELLED: { label: "Cancelada", cls: "bg-destructive/15 text-destructive border-destructive/30" },
 };
 
 export function BookingStatusBadge({ status }: { status: BookingStatus }) {
   const c = CONFIG[status];
   return (
-    <Badge variant={c.variant} className={cn("text-[10px]")}>
+    <Badge variant="outline" className={cn("text-[10px]", c.cls)}>
       {c.label}
     </Badge>
   );

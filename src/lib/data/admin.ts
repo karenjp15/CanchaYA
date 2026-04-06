@@ -132,15 +132,7 @@ export async function getWeekGridBookings(
 
   return data.map((b) => {
     const startDate = new Date(b.start_time);
-    const bogotaDay = parseInt(
-      startDate.toLocaleString("en-US", {
-        weekday: "narrow",
-        timeZone: "America/Bogota",
-      }),
-      10,
-    );
-
-    let dayOfWeek = startDate.toLocaleDateString("en-US", {
+    const dayOfWeek = startDate.toLocaleDateString("en-US", {
       weekday: "short",
       timeZone: "America/Bogota",
     });

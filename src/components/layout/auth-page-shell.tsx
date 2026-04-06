@@ -1,4 +1,4 @@
-export default function AuthLayout({
+export function AuthPageShell({
   children,
 }: {
   children: React.ReactNode;

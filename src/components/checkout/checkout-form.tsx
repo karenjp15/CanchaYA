@@ -50,7 +50,7 @@ export function CheckoutForm({
   const [state, formAction, pending] = useActionState(processCheckout, initial);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(260px,320px)]">
       <Card>
         <CardHeader>
           <CardTitle>Detalles de pago</CardTitle>
@@ -137,12 +137,12 @@ export function CheckoutForm({
 
             <div className="space-y-2">
               <span className="text-sm font-medium">Método de pago</span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
                 {PAYMENT_METHODS.map((m) => (
                   <label
                     key={m.value}
                     className={cn(
-                      "flex cursor-pointer items-center justify-center rounded-lg border-2 border-border py-3 text-sm font-semibold transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                      "flex cursor-pointer items-center justify-center rounded-lg border-2 border-border py-2.5 text-xs font-semibold transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10 sm:py-3 sm:text-sm",
                     )}
                   >
                     <input
@@ -173,14 +173,16 @@ export function CheckoutForm({
           <CardTitle className="text-sm">Resumen</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <dl className="space-y-2">
-            <div className="flex justify-between">
+          <dl className="space-y-2.5">
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
               <dt className="text-muted-foreground">Cancha</dt>
-              <dd className="font-medium">{fieldName}</dd>
+              <dd className="min-w-0 break-words font-medium sm:text-right">
+                {fieldName}
+              </dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
               <dt className="text-muted-foreground">Inicio</dt>
-              <dd className="font-medium">
+              <dd className="font-medium sm:text-right">
                 {new Date(startTime).toLocaleString("es-CO", {
                   dateStyle: "medium",
                   timeStyle: "short",
@@ -188,9 +190,9 @@ export function CheckoutForm({
                 })}
               </dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-2">
               <dt className="text-muted-foreground">Fin</dt>
-              <dd className="font-medium">
+              <dd className="font-medium sm:text-right">
                 {new Date(endTime).toLocaleString("es-CO", {
                   dateStyle: "medium",
                   timeStyle: "short",
@@ -198,9 +200,9 @@ export function CheckoutForm({
                 })}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-border pt-2">
+            <div className="flex flex-col gap-1 border-t border-border pt-2 sm:flex-row sm:items-center sm:justify-between">
               <dt className="font-semibold">Total</dt>
-              <dd className="text-lg font-bold text-primary">
+              <dd className="text-lg font-bold text-warning sm:text-right">
                 {new Intl.NumberFormat("es-CO", {
                   style: "currency",
                   currency: "COP",

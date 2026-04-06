@@ -1,9 +1,10 @@
 "use client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import type { Field } from "@/lib/data/fields";
+import type { Field } from "@/lib/data/field-model";
 import { FIELD_TYPE_LABELS, FIELD_TYPE_PLAYERS } from "@/lib/constants";
 import { formatDateLong } from "@/lib/date-utils";
 
@@ -32,37 +33,40 @@ export function BookingDetailsPanel({
   const cost = Number(field.hourly_price) * 2;
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+    <div className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
       <h3 className="text-sm font-bold uppercase tracking-wide text-primary">
         Detalles
       </h3>
 
-      <dl className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Fecha</dt>
-          <dd className="font-medium capitalize">
+      <dl className="space-y-2.5 text-sm">
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <dt className="shrink-0 text-muted-foreground">Fecha</dt>
+          <dd className="min-w-0 font-medium capitalize sm:text-right">
             {selectedDate ? formatDateLong(selectedDate) : "—"}
           </dd>
         </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Hora</dt>
-          <dd className="font-medium">
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <dt className="shrink-0 text-muted-foreground">Hora</dt>
+          <dd className="min-w-0 font-medium sm:text-right">
             {selectedTime ? parseTimeLabel(selectedTime) : "—"}
           </dd>
         </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Cancha</dt>
-          <dd className="font-medium">{field.name}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Jugadores</dt>
-          <dd className="font-medium">
-            {FIELD_TYPE_LABELS[field.field_type]} · {FIELD_TYPE_PLAYERS[field.field_type]}
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <dt className="shrink-0 text-muted-foreground">Cancha</dt>
+          <dd className="min-w-0 break-words font-medium sm:text-right">
+            {field.name}
           </dd>
         </div>
-        <div className="flex justify-between border-t border-border pt-2">
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <dt className="shrink-0 text-muted-foreground">Jugadores</dt>
+          <dd className="min-w-0 font-medium sm:text-right">
+            {FIELD_TYPE_LABELS[field.field_type]} ·{" "}
+            {FIELD_TYPE_PLAYERS[field.field_type]}
+          </dd>
+        </div>
+        <div className="flex flex-col gap-0.5 border-t border-border pt-2 sm:flex-row sm:items-center sm:justify-between">
           <dt className="font-semibold">Costo</dt>
-          <dd className="font-bold text-primary">
+          <dd className="font-bold text-warning sm:text-right">
             {ready
               ? new Intl.NumberFormat("es-CO", {
                   style: "currency",
@@ -74,18 +78,25 @@ export function BookingDetailsPanel({
         </div>
       </dl>
 
-      {ready ? (
-        <Link
-          href={`/checkout?field=${field.id}&date=${selectedDate}&time=${encodeURIComponent(selectedTime!)}`}
-          className={cn(buttonVariants(), "w-full")}
-        >
-          Reservar
-        </Link>
-      ) : (
-        <div className="rounded-lg bg-muted/50 p-3 text-center text-xs text-muted-foreground">
-          Selecciona fecha y hora para continuar
-        </div>
-      )}
+      <div className="space-y-2">
+        {!ready ? (
+          <p className="text-center text-xs text-muted-foreground">
+            Selecciona fecha y hora para continuar
+          </p>
+        ) : null}
+        {ready ? (
+          <Link
+            href={`/checkout?field=${field.id}&date=${selectedDate}&time=${encodeURIComponent(selectedTime!)}`}
+            className={cn(buttonVariants(), "w-full justify-center")}
+          >
+            Reservar
+          </Link>
+        ) : (
+          <Button type="button" disabled className="w-full">
+            Reservar
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

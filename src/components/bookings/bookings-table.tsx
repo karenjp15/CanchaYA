@@ -9,6 +9,28 @@ import { APP_TIMEZONE } from "@/lib/constants";
 
 type SortKey = "date" | "price" | "status";
 
+function SortHeaderButton({
+  k,
+  label,
+  onToggle,
+}: {
+  k: SortKey;
+  label: string;
+  onToggle: (key: SortKey) => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="xs"
+      className="gap-1 text-xs"
+      onClick={() => onToggle(k)}
+    >
+      {label}
+      <ArrowUpDown className="size-3" />
+    </Button>
+  );
+}
+
 function formatCOP(n: number) {
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
@@ -58,26 +80,12 @@ export function BookingsTable({ bookings }: { bookings: BookingWithField[] }) {
     return copy;
   }, [bookings, sortKey, asc]);
 
-  function SortButton({ k, label }: { k: SortKey; label: string }) {
-    return (
-      <Button
-        variant="ghost"
-        size="xs"
-        className="gap-1 text-xs"
-        onClick={() => toggleSort(k)}
-      >
-        {label}
-        <ArrowUpDown className="size-3" />
-      </Button>
-    );
-  }
-
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <SortButton k="date" label="Fecha" />
-        <SortButton k="price" label="Precio" />
-        <SortButton k="status" label="Estado" />
+        <SortHeaderButton k="date" label="Fecha" onToggle={toggleSort} />
+        <SortHeaderButton k="price" label="Precio" onToggle={toggleSort} />
+        <SortHeaderButton k="status" label="Estado" onToggle={toggleSort} />
         <span className="ml-auto">
           <Button variant="outline" size="xs" className="gap-1">
             <Filter className="size-3" /> Filtrar

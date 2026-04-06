@@ -1,14 +1,21 @@
 import { z } from "zod";
 
-export const fieldFormSchema = z.object({
+const fieldCore = {
   name: z.string().min(2, "Nombre requerido"),
   description: z.string().optional(),
   fieldType: z.enum(["F5", "F6", "F7", "F8", "F11"]),
   surface: z.enum(["ROOFED", "OPEN"]),
   hourlyPrice: z.coerce.number().min(0, "El precio debe ser positivo"),
-  address: z.string().min(3, "Dirección requerida"),
-  parkingAvailable: z.coerce.boolean(),
-  sellsLiquor: z.coerce.boolean(),
+};
+
+export const fieldCreateSchema = z.object({
+  ...fieldCore,
+  venueId: z.string().uuid("Elige un local"),
 });
 
-export type FieldFormInput = z.infer<typeof fieldFormSchema>;
+export const fieldUpdateSchema = z.object({
+  ...fieldCore,
+});
+
+export type FieldCreateInput = z.infer<typeof fieldCreateSchema>;
+export type FieldUpdateInput = z.infer<typeof fieldUpdateSchema>;

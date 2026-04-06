@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldFormDialog } from "@/components/admin/field-form-dialog";
 import { FIELD_TYPE_LABELS } from "@/lib/constants";
-import type { Field } from "@/lib/data/fields";
+import { fieldAddress, type Field } from "@/lib/data/field-model";
+import type { Venue } from "@/lib/data/venues";
 import { cn } from "@/lib/utils";
 import { Power } from "lucide-react";
 
@@ -18,16 +20,19 @@ function formatCOP(n: number) {
 
 type FieldsTableProps = {
   fields: Field[];
+  venues: Venue[];
   onToggleActive?: (id: string, active: boolean) => void;
 };
 
-export function FieldsTable({ fields, onToggleActive }: FieldsTableProps) {
+export function FieldsTable({ fields, venues, onToggleActive }: FieldsTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
+            <th className="px-4 py-2.5 font-medium w-14">Foto</th>
             <th className="px-4 py-2.5 font-medium">Nombre</th>
+            <th className="px-4 py-2.5 font-medium">Local</th>
             <th className="px-4 py-2.5 font-medium">Dirección</th>
             <th className="px-4 py-2.5 font-medium">Tipo</th>
             <th className="px-4 py-2.5 font-medium">Superficie</th>
@@ -47,9 +52,29 @@ export function FieldsTable({ fields, onToggleActive }: FieldsTableProps) {
                 !f.is_active && "opacity-50",
               )}
             >
+              <td className="px-4 py-3">
+                <div className="relative size-10 overflow-hidden rounded-md bg-muted">
+                  {f.image_url ? (
+                    <Image
+                      src={f.image_url}
+                      alt={f.name}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
+                  ) : (
+                    <span className="flex size-full items-center justify-center text-sm text-muted-foreground">
+                      ⚽
+                    </span>
+                  )}
+                </div>
+              </td>
               <td className="px-4 py-3 font-medium">{f.name}</td>
+              <td className="px-4 py-3 text-muted-foreground max-w-[140px] truncate">
+                {f.venues.name}
+              </td>
               <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">
-                {f.address}
+                {fieldAddress(f)}
               </td>
               <td className="px-4 py-3">
                 <Badge variant="outline" className="text-[10px]">
@@ -63,14 +88,14 @@ export function FieldsTable({ fields, onToggleActive }: FieldsTableProps) {
                 {formatCOP(Number(f.hourly_price))}
               </td>
               <td className="px-4 py-3 text-center">
-                {f.parking_available ? (
+                {f.venues.parking_available ? (
                   <span className="text-primary">✓</span>
                 ) : (
                   <span className="text-muted-foreground">—</span>
                 )}
               </td>
               <td className="px-4 py-3 text-center">
-                {f.sells_liquor ? (
+                {f.venues.sells_liquor ? (
                   <span className="text-primary">✓</span>
                 ) : (
                   <span className="text-muted-foreground">—</span>
@@ -86,7 +111,7 @@ export function FieldsTable({ fields, onToggleActive }: FieldsTableProps) {
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center justify-center gap-1">
-                  <FieldFormDialog mode="edit" field={f} />
+                  <FieldFormDialog mode="edit" field={f} venues={venues} />
                   <Button
                     variant="ghost"
                     size="icon-sm"
@@ -106,7 +131,7 @@ export function FieldsTable({ fields, onToggleActive }: FieldsTableProps) {
           ))}
           {fields.length === 0 && (
             <tr>
-              <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+              <td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
                 No hay canchas registradas.
               </td>
             </tr>

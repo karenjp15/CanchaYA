@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { FieldFilters } from "@/components/fields/field-filters";
 import { FieldCard } from "@/components/fields/field-card";
-import { FieldsMapPlaceholder } from "@/components/fields/fields-map-placeholder";
+import { FieldsMapLoader } from "@/components/fields/fields-map-loader";
 import { getActiveFields } from "@/lib/data/fields";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Explorar canchas",
@@ -21,17 +22,18 @@ export default async function ExplorarPage({ searchParams }: Props) {
   const fields = await getActiveFields(q);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-6 lg:flex-row lg:gap-8">
-      <div className="w-full shrink-0 lg:w-56">
+    <div className="flex flex-1 flex-col gap-5 py-4 sm:gap-6 sm:py-6 lg:flex-row lg:items-start lg:gap-6">
+      <div className="w-full shrink-0 lg:sticky lg:top-20 lg:w-52 lg:self-start">
         <Suspense>
           <FieldFilters />
         </Suspense>
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 xl:flex-row xl:gap-8">
-        <div className="order-2 grid flex-1 auto-rows-max grid-cols-1 gap-4 sm:grid-cols-2 xl:order-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-5 xl:flex-row xl:items-start xl:gap-6 2xl:gap-8">
+        {/* Lista primero en móvil/tablet; mapa arriba solo donde cabe bien */}
+        <div className="order-2 grid min-w-0 flex-1 auto-rows-max grid-cols-1 gap-4 sm:grid-cols-2 xl:order-1 xl:min-w-0">
           {fields.length === 0 ? (
-            <div className="col-span-full rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">
+            <div className="col-span-full rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground sm:p-10">
               No se encontraron canchas con esos filtros.
             </div>
           ) : (
@@ -39,8 +41,26 @@ export default async function ExplorarPage({ searchParams }: Props) {
           )}
         </div>
 
-        <div className="order-1 xl:order-2 xl:w-[45%]">
-          <FieldsMapPlaceholder fields={fields} />
+        {/* Mapa: altura por viewport en pantallas estrechas; columna fija en xl+ */}
+        <div
+          className={cn(
+            "order-1 w-full shrink-0 xl:order-2",
+            "xl:sticky xl:top-20 xl:w-[min(100%,22rem)] 2xl:w-[min(100%,26rem)]",
+          )}
+        >
+          <div
+            className={cn(
+              "relative w-full overflow-hidden rounded-xl border border-border bg-muted/20 shadow-sm",
+              /* Móvil/tablet: altura acotada (evita mapas “torres” con aspect 2/3) */
+              "h-[min(36vh,260px)] sm:h-[min(38vh,300px)] md:h-[min(42vh,340px)]",
+              /* Escritorio ancho: altura cómoda junto al grid */
+              "lg:h-[min(44vh,380px)] xl:h-[min(70vh,520px)] xl:min-h-[280px]",
+            )}
+          >
+            <div className="absolute inset-0 min-h-0">
+              <FieldsMapLoader fields={fields} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

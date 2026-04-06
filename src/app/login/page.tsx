@@ -1,5 +1,7 @@
 import { LoginForm } from "@/components/auth/login-form";
 
+export const metadata = { title: "Ingresar" };
+
 type Props = {
   searchParams: Promise<{ next?: string; error?: string }>;
 };

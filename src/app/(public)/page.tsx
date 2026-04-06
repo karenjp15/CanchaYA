@@ -33,14 +33,14 @@ export default function HomePage() {
             línea. Zona horaria: America/Bogotá.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/register" className={cn(buttonVariants())}>
-              Crear cuenta
+            <Link href="/explorar" className={cn(buttonVariants())}>
+              Explorar canchas
             </Link>
             <Link
               href="/login"
               className={cn(buttonVariants({ variant: "outline" }))}
             >
-              Ya tengo cuenta
+              Ingresar
             </Link>
           </div>
         </div>

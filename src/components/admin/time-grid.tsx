@@ -206,7 +206,9 @@ export function TimeGrid({
                         style={{ height: `calc(${spanHours * 100}% - 4px)` }}
                       >
                         <span className="font-semibold line-clamp-1">
-                          {booking.field_name}
+                          {booking.venue_name
+                            ? `${booking.venue_name} · ${booking.field_name}`
+                            : booking.field_name}
                         </span>
                         <span className="opacity-70 line-clamp-1">
                           {booking.user_name}
@@ -236,7 +238,11 @@ export function TimeGrid({
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-1">
-              <h4 className="font-semibold">{selected.field_name}</h4>
+              <h4 className="font-semibold">
+                {selected.venue_name
+                  ? `${selected.venue_name} · ${selected.field_name}`
+                  : selected.field_name}
+              </h4>
               <p className="text-sm text-muted-foreground">
                 {DAY_LABELS[selected.day]} · {formatHour(selected.startHour)} – {formatHour(selected.endHour)}
               </p>

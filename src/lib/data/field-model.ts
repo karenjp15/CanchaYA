@@ -6,6 +6,19 @@ type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 /** Cancha con datos del establecimiento (venue) incluidos vía join. */
 export type Field = FieldRow & { venues: VenueRow };
 
+/** Nombre comercial del establecimiento (venue). */
+export function fieldVenueName(f: Field): string {
+  return (f.venues?.name ?? "").trim();
+}
+
+/** Una sola línea para checkout y resúmenes: "Establecimiento · Cancha". */
+export function fieldBookingSummaryLine(f: Field): string {
+  const v = fieldVenueName(f);
+  const court = (f.name ?? "").trim();
+  if (v && court) return `${v} · ${court}`;
+  return v || court || "—";
+}
+
 export function fieldAddress(f: Field): string {
   return f.venues?.address ?? "";
 }

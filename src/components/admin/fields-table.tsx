@@ -31,7 +31,7 @@ export function FieldsTable({ fields, venues, onToggleActive }: FieldsTableProps
         <thead>
           <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
             <th className="px-4 py-2.5 font-medium w-14">Foto</th>
-            <th className="px-4 py-2.5 font-medium">Nombre</th>
+            <th className="px-4 py-2.5 font-medium">Cancha</th>
             <th className="px-4 py-2.5 font-medium">Establecimiento</th>
             <th className="px-4 py-2.5 font-medium">Dirección</th>
             <th className="px-4 py-2.5 font-medium">Tipo</th>

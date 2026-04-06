@@ -8,6 +8,13 @@ type Props = {
   selectedVenueId: string | null;
 };
 
+function venueOptionLabel(v: Venue): string {
+  const addr = (v.address ?? "").trim();
+  if (!addr) return v.name;
+  const short = addr.length > 52 ? `${addr.slice(0, 49)}…` : addr;
+  return `${v.name} (${short})`;
+}
+
 export function DashboardVenueFilter({ venues, selectedVenueId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,7 +43,7 @@ export function DashboardVenueFilter({ venues, selectedVenueId }: Props) {
         <option value="">Todos</option>
         {venues.map((v) => (
           <option key={v.id} value={v.id}>
-            {v.name}
+            {venueOptionLabel(v)}
           </option>
         ))}
       </select>

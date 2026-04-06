@@ -5,6 +5,7 @@ type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
 
 export type BookingWithField = BookingRow & {
   field_name: string;
+  venue_name: string;
 };
 
 export async function getBookingsByUser(userId: string): Promise<{
@@ -15,7 +16,7 @@ export async function getBookingsByUser(userId: string): Promise<{
 
   const { data, error } = await supabase
     .from("bookings")
-    .select("*, fields!inner(name)")
+    .select("*, fields!inner(name, venues(name))")
     .eq("user_id", userId)
     .order("start_time", { ascending: false });
 
@@ -23,11 +24,18 @@ export async function getBookingsByUser(userId: string): Promise<{
 
   const now = new Date();
 
-  const all: BookingWithField[] = (data ?? []).map((b) => ({
-    ...b,
-    fields: undefined,
-    field_name: (b.fields as unknown as { name: string }).name,
-  })) as BookingWithField[];
+  const all: BookingWithField[] = (data ?? []).map((b) => {
+    const fld = b.fields as unknown as {
+      name: string;
+      venues: { name: string } | null;
+    };
+    return {
+      ...b,
+      fields: undefined,
+      field_name: fld.name,
+      venue_name: (fld.venues?.name ?? "").trim(),
+    };
+  }) as BookingWithField[];
 
   const upcoming = all.filter(
     (b) => new Date(b.start_time) >= now && b.status !== "CANCELLED",

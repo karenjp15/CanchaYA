@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import type { Field } from "@/lib/data/field-model";
+import { fieldVenueName, type Field } from "@/lib/data/field-model";
 import { FIELD_TYPE_LABELS, FIELD_TYPE_PLAYERS } from "@/lib/constants";
 import { formatDateLong } from "@/lib/date-utils";
 
@@ -29,6 +29,7 @@ export function BookingDetailsPanel({
   selectedDate,
   selectedTime,
 }: BookingDetailsPanelProps) {
+  const venue = fieldVenueName(field);
   const ready = selectedDate && selectedTime;
   const cost = Number(field.hourly_price) * 2;
 
@@ -51,6 +52,14 @@ export function BookingDetailsPanel({
             {selectedTime ? parseTimeLabel(selectedTime) : "—"}
           </dd>
         </div>
+        {venue ? (
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+            <dt className="shrink-0 text-muted-foreground">Establecimiento</dt>
+            <dd className="min-w-0 break-words font-medium sm:text-right">
+              {venue}
+            </dd>
+          </div>
+        ) : null}
         <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <dt className="shrink-0 text-muted-foreground">Cancha</dt>
           <dd className="min-w-0 break-words font-medium sm:text-right">

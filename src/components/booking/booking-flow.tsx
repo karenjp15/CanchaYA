@@ -6,12 +6,17 @@ import { TimeSlotPicker } from "@/components/booking/time-slot-picker";
 import { BookingDetailsPanel } from "@/components/booking/booking-details-panel";
 import { generateTimeSlots, formatDateLong } from "@/lib/date-utils";
 import { getBookedSlots } from "@/actions/slots";
-import { fieldAddress, type Field } from "@/lib/data/field-model";
+import {
+  fieldAddress,
+  fieldVenueName,
+  type Field,
+} from "@/lib/data/field-model";
 import { FIELD_TYPE_LABELS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Car, Wine, Loader2 } from "lucide-react";
 
 export function BookingFlow({ field }: { field: Field }) {
+  const venue = fieldVenueName(field);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookedHours, setBookedHours] = useState<number[]>([]);
@@ -39,14 +44,19 @@ export function BookingFlow({ field }: { field: Field }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={field.image_url}
-            alt={field.name}
+            alt={venue ? `${venue} — ${field.name}` : field.name}
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 text-white">
             <h1 className="text-xl font-semibold drop-shadow-lg sm:text-2xl">
-              {field.name}
+              {venue || field.name}
             </h1>
+            {venue ? (
+              <p className="mt-0.5 text-sm font-medium text-white/90 drop-shadow">
+                {field.name}
+              </p>
+            ) : null}
             <p className="mt-0.5 flex items-center gap-1 text-sm text-white/90 drop-shadow">
               <MapPin className="size-3.5" /> {fieldAddress(field)}
             </p>
@@ -62,7 +72,9 @@ export function BookingFlow({ field }: { field: Field }) {
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           {!field.image_url && (
             <>
-              <span className="font-medium text-foreground">{field.name}</span>
+              <span className="font-medium text-foreground">
+                {venue ? `${venue} · ${field.name}` : field.name}
+              </span>
               <span className="hidden sm:inline">·</span>
               <span className="flex items-center gap-1">
                 <MapPin className="size-3.5" /> {fieldAddress(field)}

@@ -5,6 +5,7 @@ import {
   fieldAddress,
   fieldLatitude,
   fieldLongitude,
+  fieldVenueName,
   type Field,
 } from "@/lib/data/field-model";
 import Link from "next/link";
@@ -85,7 +86,9 @@ function MapInner({ fields }: { fields: Field[] }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {validFields.map((field) => (
+        {validFields.map((field) => {
+          const venue = fieldVenueName(field);
+          return (
           <Marker
             key={field.id}
             position={[
@@ -96,7 +99,12 @@ function MapInner({ fields }: { fields: Field[] }) {
           >
             <Popup>
               <div className="space-y-1 text-sm">
-                <p className="font-semibold">{field.name}</p>
+                <p className="font-semibold">
+                  {venue || field.name}
+                </p>
+                {venue ? (
+                  <p className="text-xs text-muted-foreground">{field.name}</p>
+                ) : null}
                 <p className="text-muted-foreground">
                   {fieldAddress(field)}
                 </p>
@@ -112,7 +120,8 @@ function MapInner({ fields }: { fields: Field[] }) {
               </div>
             </Popup>
           </Marker>
-        ))}
+          );
+        })}
       </MapContainer>
     </div>
   );

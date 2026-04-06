@@ -8,7 +8,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FIELD_TYPE_LABELS, FIELD_TYPE_PLAYERS } from "@/lib/constants";
-import { fieldAddress, type Field } from "@/lib/data/field-model";
+import {
+  fieldAddress,
+  fieldVenueName,
+  type Field,
+} from "@/lib/data/field-model";
 import { MapPin, Car, Wine } from "lucide-react";
 
 function formatCOP(amount: number) {
@@ -21,6 +25,7 @@ function formatCOP(amount: number) {
 
 export function FieldCard({ field }: { field: Field }) {
   const price = Number(field.hourly_price);
+  const venue = fieldVenueName(field);
 
   return (
     <Link href={`/canchas/${field.id}`}>
@@ -29,7 +34,7 @@ export function FieldCard({ field }: { field: Field }) {
           {field.image_url ? (
             <Image
               src={field.image_url}
-              alt={field.name}
+              alt={venue ? `${venue} — ${field.name}` : field.name}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
@@ -47,8 +52,13 @@ export function FieldCard({ field }: { field: Field }) {
         </div>
         <CardHeader className="pb-1">
           <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
-            {field.name}
+            {venue || field.name}
           </CardTitle>
+          {venue ? (
+            <p className="text-xs text-muted-foreground line-clamp-1 -mt-0.5">
+              {field.name}
+            </p>
+          ) : null}
         </CardHeader>
         <CardContent className="space-y-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">

@@ -113,7 +113,11 @@ export function BookingsTable({ bookings }: { bookings: BookingWithField[] }) {
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                   {i + 1}
                 </td>
-                <td className="px-4 py-3 font-medium">{b.field_name}</td>
+                <td className="px-4 py-3 font-medium">
+                  {b.venue_name
+                    ? `${b.venue_name} · ${b.field_name}`
+                    : b.field_name}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {formatDateTime(b.start_time)}
                 </td>

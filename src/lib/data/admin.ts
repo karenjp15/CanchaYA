@@ -12,6 +12,7 @@ export type AdminMetrics = {
 export type GridBooking = {
   id: string;
   field_name: string;
+  venue_name: string;
   field_id: string;
   user_name: string;
   user_email: string;
@@ -125,7 +126,7 @@ export async function getWeekGridBookings(
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "id, field_id, start_time, end_time, status, billing_first_name, fields!inner(name), profiles:user_id(full_name, email)",
+      "id, field_id, start_time, end_time, status, billing_first_name, fields!inner(name, venues(name)), profiles:user_id(full_name, email)",
     )
     .in("field_id", ids)
     .gte("start_time", startStr)
@@ -144,15 +145,21 @@ export async function getWeekGridBookings(
       Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6,
     };
 
-    const field = b.fields as unknown as { name: string };
+    const field = b.fields as unknown as {
+      name: string;
+      venues: { name: string } | null;
+    };
     const profile = b.profiles as unknown as {
       full_name: string | null;
       email: string | null;
     } | null;
 
+    const venueName = (field?.venues?.name ?? "").trim();
+
     return {
       id: b.id,
       field_name: field?.name ?? "—",
+      venue_name: venueName,
       field_id: b.field_id,
       user_name:
         (b.billing_first_name && b.billing_first_name.trim()) ||

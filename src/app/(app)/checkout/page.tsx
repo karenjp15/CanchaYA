@@ -1,4 +1,5 @@
 import { CheckoutForm } from "@/components/checkout/checkout-form";
+import { fieldBookingSummaryLine } from "@/lib/data/field-model";
 import { getFieldById } from "@/lib/data/fields";
 import { redirect } from "next/navigation";
 
@@ -27,7 +28,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
     <div className="mx-auto w-full max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
       <CheckoutForm
         fieldId={field.id}
-        fieldName={field.name}
+        fieldName={fieldBookingSummaryLine(field)}
         startTime={startTime}
         endTime={endTime}
         totalPrice={totalPrice}

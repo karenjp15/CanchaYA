@@ -45,7 +45,8 @@ export function AppLeftNav() {
       <nav
         aria-label="Principal"
         className={cn(
-          "flex flex-1 items-stretch justify-around gap-0 px-1 md:flex-col md:justify-start md:gap-0.5 md:px-2 md:pb-4 md:pt-3",
+          "flex flex-1 items-stretch justify-around gap-0 px-1",
+          "md:flex-col md:items-stretch md:justify-start md:gap-0.5 md:px-4 md:pb-4 md:pt-3",
         )}
       >
         {navItems.map(({ href, label, icon: Icon }) => {
@@ -55,7 +56,8 @@ export function AppLeftNav() {
               key={href}
               href={href}
               className={cn(
-                "relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors md:flex-none md:flex-row md:gap-3 md:rounded-lg md:px-3 md:py-2.5 md:text-sm",
+                "relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors",
+                "md:w-full md:flex-none md:flex-row md:items-center md:justify-start md:gap-3 md:rounded-lg md:py-2.5 md:pl-0 md:pr-2 md:text-left md:text-sm",
                 active
                   ? "text-primary after:absolute after:bottom-1.5 after:left-1/2 after:h-0.5 after:w-7 after:-translate-x-1/2 after:rounded-full after:bg-primary md:after:hidden md:bg-primary/10 md:text-primary md:shadow-sm md:ring-1 md:ring-primary/15"
                   : "text-muted-foreground hover:text-foreground md:hover:bg-muted/50",
@@ -63,7 +65,7 @@ export function AppLeftNav() {
             >
               <span
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-lg transition-colors md:size-8",
+                  "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors md:size-8",
                   active
                     ? "bg-primary/15 text-primary md:bg-primary/10"
                     : "bg-transparent md:bg-muted/40 md:text-muted-foreground",
@@ -71,7 +73,7 @@ export function AppLeftNav() {
               >
                 <Icon className="size-[1.15rem] md:size-4" />
               </span>
-              <span>{label}</span>
+              <span className="md:text-left">{label}</span>
             </Link>
           );
         })}

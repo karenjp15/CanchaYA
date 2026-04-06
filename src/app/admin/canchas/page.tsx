@@ -25,10 +25,10 @@ export default async function AdminCanchasPage() {
         <div>
           <h1 className="text-2xl font-semibold">Canchas</h1>
           <p className="text-sm text-muted-foreground">
-            Cada cancha pertenece a un local. Dirección, mapa y servicios se
-            configuran en{" "}
+            Cada cancha pertenece a un establecimiento. Dirección, mapa y
+            servicios se configuran en{" "}
             <Link href="/admin/locales" className="font-medium text-primary underline-offset-2 hover:underline">
-              Locales
+              Establecimientos
             </Link>
             .
           </p>
@@ -37,7 +37,7 @@ export default async function AdminCanchasPage() {
           <FieldFormDialog mode="create" venues={venues} />
         ) : (
           <Link href="/admin/locales" className={cn(buttonVariants())}>
-            Crear local primero
+            Crear establecimiento primero
           </Link>
         )}
       </div>

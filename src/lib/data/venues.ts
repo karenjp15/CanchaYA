@@ -3,7 +3,7 @@ import type { Database } from "@/types/database.types";
 
 export type Venue = Database["public"]["Tables"]["venues"]["Row"];
 
-/** Locales activos (explorar / selects públicos). */
+/** Establecimientos activos (explorar / selects públicos). */
 export async function getVenuesByOwner(ownerId: string): Promise<Venue[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -17,7 +17,7 @@ export async function getVenuesByOwner(ownerId: string): Promise<Venue[]> {
   return data ?? [];
 }
 
-/** Todos los locales del dueño (panel admin). */
+/** Todos los establecimientos del dueño (panel admin). */
 export async function getAllVenuesByOwner(ownerId: string): Promise<Venue[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

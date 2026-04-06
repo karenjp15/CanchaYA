@@ -60,7 +60,7 @@ export async function createVenue(
   revalidatePath("/admin/locales");
   revalidatePath("/admin/canchas");
   revalidatePath("/explorar");
-  return { message: "Local creado" };
+  return { message: "Establecimiento creado" };
 }
 
 export async function updateVenue(
@@ -68,7 +68,7 @@ export async function updateVenue(
   formData: FormData,
 ): Promise<VenueActionState> {
   const venueId = formData.get("venueId") as string;
-  if (!venueId) return { error: "ID de local requerido" };
+  if (!venueId) return { error: "ID de establecimiento requerido" };
 
   const parsed = venueFormSchema.safeParse({
     name: formData.get("name"),
@@ -103,5 +103,5 @@ export async function updateVenue(
   revalidatePath("/admin/locales");
   revalidatePath("/admin/canchas");
   revalidatePath("/explorar");
-  return { message: "Local actualizado" };
+  return { message: "Establecimiento actualizado" };
 }

@@ -61,7 +61,7 @@ export async function createField(
     .single();
 
   if (vErr || !venue || venue.owner_id !== user.id) {
-    return { error: "Local no válido o no te pertenece" };
+    return { error: "Establecimiento no válido o no te pertenece" };
   }
 
   const { data: inserted, error } = await supabase

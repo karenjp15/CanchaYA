@@ -45,21 +45,23 @@ function todayRangeBogota() {
 
 export async function getAdminMetrics(
   ownerId: string,
+  venueId?: string | null,
 ): Promise<AdminMetrics> {
   const supabase = await createClient();
   const { start, end } = todayRangeBogota();
 
-  const fieldIds = await supabase
-    .from("fields")
-    .select("id")
-    .eq("owner_id", ownerId);
+  let fieldQuery = supabase.from("fields").select("id").eq("owner_id", ownerId);
+  if (venueId) fieldQuery = fieldQuery.eq("venue_id", venueId);
+  const fieldIds = await fieldQuery;
 
   const ids = (fieldIds.data ?? []).map((f) => f.id);
-  const activeCount = await supabase
+  let activeQuery = supabase
     .from("fields")
     .select("id", { count: "exact", head: true })
     .eq("owner_id", ownerId)
     .eq("is_active", true);
+  if (venueId) activeQuery = activeQuery.eq("venue_id", venueId);
+  const activeCount = await activeQuery;
 
   if (ids.length === 0) {
     return {
@@ -102,6 +104,7 @@ export async function getAdminMetrics(
 export async function getWeekGridBookings(
   ownerId: string,
   weekStartISO: string,
+  venueId?: string | null,
 ): Promise<GridBooking[]> {
   const supabase = await createClient();
 
@@ -112,17 +115,18 @@ export async function getWeekGridBookings(
   const startStr = weekStart.toISOString();
   const endStr = weekEnd.toISOString();
 
-  const fieldIds = await supabase
-    .from("fields")
-    .select("id")
-    .eq("owner_id", ownerId);
+  let fieldQuery = supabase.from("fields").select("id").eq("owner_id", ownerId);
+  if (venueId) fieldQuery = fieldQuery.eq("venue_id", venueId);
+  const fieldIds = await fieldQuery;
 
   const ids = (fieldIds.data ?? []).map((f) => f.id);
   if (ids.length === 0) return [];
 
   const { data, error } = await supabase
     .from("bookings")
-    .select("id, field_id, start_time, end_time, status, fields!inner(name), profiles:user_id(full_name, email)")
+    .select(
+      "id, field_id, start_time, end_time, status, billing_first_name, fields!inner(name), profiles:user_id(full_name, email)",
+    )
     .in("field_id", ids)
     .gte("start_time", startStr)
     .lt("start_time", endStr)
@@ -150,7 +154,10 @@ export async function getWeekGridBookings(
       id: b.id,
       field_name: field?.name ?? "—",
       field_id: b.field_id,
-      user_name: profile?.full_name ?? "Sin nombre",
+      user_name:
+        (b.billing_first_name && b.billing_first_name.trim()) ||
+        profile?.full_name ||
+        "Sin nombre",
       user_email: profile?.email ?? "",
       day: dayMap[dayOfWeek] ?? 0,
       startHour: toBogotaHour(b.start_time),

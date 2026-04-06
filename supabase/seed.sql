@@ -22,6 +22,12 @@ DECLARE
   v_field2 uuid;
   v_field3 uuid;
   v_field4 uuid;
+  v_d int;
+  v_h int;
+  v_slot int := 0;
+  v_week_start timestamp;
+  v_admin_booking_count int;
+  v_field_ids uuid[];
 BEGIN
   SELECT id INTO v_admin_id FROM public.profiles WHERE email = 'admin@test.com';
   SELECT id INTO v_player_id FROM public.profiles WHERE email = 'kjuliethp@test.com';
@@ -111,6 +117,67 @@ BEGIN
     RAISE NOTICE 'Bookings de prueba insertados correctamente.';
   ELSE
     RAISE NOTICE 'El jugador ya tiene bookings, saltando inserción.';
+  END IF;
+
+  -- ========================================================================
+  -- Reservas demo (dashboard con semana y métricas “llenas”)
+  -- ========================================================================
+  SELECT count(*)::int INTO v_admin_booking_count
+  FROM public.bookings b
+  JOIN public.fields f ON f.id = b.field_id
+  WHERE f.owner_id = v_admin_id;
+
+  IF v_admin_booking_count < 32 THEN
+    v_week_start := date_trunc('week', clock_timestamp() AT TIME ZONE 'America/Bogota');
+
+    SELECT coalesce(array_agg(id ORDER BY name), ARRAY[]::uuid[]) INTO v_field_ids
+    FROM public.fields WHERE owner_id = v_admin_id;
+
+    IF coalesce(array_length(v_field_ids, 1), 0) = 0 THEN
+      RAISE NOTICE 'Sin canchas del admin, no se insertan reservas demo.';
+    ELSE
+      FOR v_d IN 0..6 LOOP
+        FOREACH v_h IN ARRAY ARRAY[8, 11, 14, 17, 20]::int[] LOOP
+          v_slot := v_slot + 1;
+
+          INSERT INTO public.bookings (
+            user_id, field_id, start_time, end_time, total_price, status,
+            payment_method, billing_first_name, billing_last_name, billing_email,
+            billing_phone, id_document_type, id_number
+          ) VALUES (
+            v_player_id,
+            v_field_ids[1 + ((v_slot - 1) % array_length(v_field_ids, 1))],
+            ((v_week_start + (v_d || ' days')::interval + (v_h || ' hours')::interval) AT TIME ZONE 'America/Bogota'),
+            ((v_week_start + (v_d || ' days')::interval + ((v_h + 2) || ' hours')::interval) AT TIME ZONE 'America/Bogota'),
+            (150000 + (v_slot % 9) * 40000)::numeric,
+            CASE (v_slot % 7)
+              WHEN 0 THEN 'PENDING'::public.booking_status
+              WHEN 1 THEN 'CANCELLED'::public.booking_status
+              ELSE 'PAID'::public.booking_status
+            END,
+            CASE WHEN (v_slot % 7) NOT IN (0, 1) THEN 'PSE' ELSE NULL END,
+            (ARRAY['Ana', 'Luis', 'María', 'Carlos', 'Sofía', 'Diego', 'Valentina', 'Andrés', 'Camila']::text[])[1 + (v_slot % 9)],
+            'Demo',
+            'demo.reserva@example.com',
+            '3005550000',
+            'CC',
+            '9000000000'
+          );
+        END LOOP;
+      END LOOP;
+
+      UPDATE public.profiles
+      SET full_name = 'Admin Demo CanchaYa', phone = '+57 300 000 0001'
+      WHERE id = v_admin_id;
+
+      UPDATE public.profiles
+      SET full_name = 'Jugador Demo Kjulieth'
+      WHERE id = v_player_id;
+
+      RAISE NOTICE 'Reservas demo del dashboard insertadas.';
+    END IF;
+  ELSE
+    RAISE NOTICE 'El admin ya tiene suficientes reservas; no se inserta el bloque demo.';
   END IF;
 
 END $$;

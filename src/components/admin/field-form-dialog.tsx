@@ -82,7 +82,7 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
           </DialogTitle>
           <DialogDescription>
             {mode === "create"
-              ? "Elige el local y define tipo, superficie y precio de esta cancha."
+              ? "Elige el establecimiento y define tipo, superficie y precio de esta cancha."
               : `Editando: ${field?.name}`}
           </DialogDescription>
         </DialogHeader>
@@ -106,7 +106,7 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
           <FieldGroup>
             {mode === "create" && (
               <Field>
-                <FieldLabel htmlFor="af-venue">Local</FieldLabel>
+                <FieldLabel htmlFor="af-venue">Establecimiento</FieldLabel>
                 <FieldContent>
                   <select
                     id="af-venue"
@@ -116,7 +116,7 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
                     defaultValue={venues[0]?.id ?? ""}
                   >
                     {venues.length === 0 ? (
-                      <option value="">Crea un local primero</option>
+                      <option value="">Crea un establecimiento primero</option>
                     ) : (
                       venues.map((v) => (
                         <option key={v.id} value={v.id}>

@@ -10,7 +10,7 @@ const fieldCore = {
 
 export const fieldCreateSchema = z.object({
   ...fieldCore,
-  venueId: z.string().uuid("Elige un local"),
+  venueId: z.string().uuid("Elige un establecimiento"),
 });
 
 export const fieldUpdateSchema = z.object({

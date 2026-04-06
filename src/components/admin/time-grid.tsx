@@ -64,11 +64,17 @@ function statusLabel(status: BookingStatus) {
 
 type TimeGridProps = {
   ownerId: string;
+  venueId?: string | null;
   initialBookings: GridBooking[];
   onSelectBooking?: (booking: GridBooking) => void;
 };
 
-export function TimeGrid({ ownerId, initialBookings, onSelectBooking }: TimeGridProps) {
+export function TimeGrid({
+  ownerId,
+  venueId = null,
+  initialBookings,
+  onSelectBooking,
+}: TimeGridProps) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [bookings, setBookings] = useState<GridBooking[]>(initialBookings);
   const [selected, setSelected] = useState<GridBooking | null>(null);
@@ -83,10 +89,10 @@ export function TimeGrid({ ownerId, initialBookings, onSelectBooking }: TimeGrid
     }
     startTransition(async () => {
       const mondayISO = getMondayISO(weekOffset);
-      const data = await fetchWeekBookings(ownerId, mondayISO);
+      const data = await fetchWeekBookings(ownerId, mondayISO, venueId);
       setBookings(data);
     });
-  }, [weekOffset, ownerId, initialBookings]);
+  }, [weekOffset, ownerId, venueId, initialBookings]);
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 

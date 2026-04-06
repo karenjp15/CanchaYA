@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/locales", label: "Locales", icon: Building2 },
+  { href: "/admin/locales", label: "Establecimientos", icon: Building2 },
   { href: "/admin/canchas", label: "Canchas", icon: MapPin },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
 ] as const;

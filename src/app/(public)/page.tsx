@@ -116,7 +116,8 @@ export default function HomePage() {
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-pretty text-lg text-muted-foreground">
               Plataforma para Bogotá: si alquilas canchas, reserva en minutos con
-              mapa y horarios claros; si tienes un local, publica tus canchas y
+              mapa y horarios claros; si tienes un establecimiento, publica tus
+              canchas y
               cobra sin tanto mensaje de WhatsApp.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -190,7 +191,8 @@ export default function HomePage() {
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h3 className="text-lg font-semibold">Dueños y administradores</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Registra tu local (nombre, dirección, mapa, parqueadero, licor) y
+              Registra tu establecimiento (nombre, dirección, mapa, parqueadero,
+              licor) y
               luego crea cada cancha con su tamaño, superficie y precio. Un solo
               lugar para gestionar todo lo que ofreces.
             </p>

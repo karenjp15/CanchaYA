@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Car, Wine } from "lucide-react";
 
-export const metadata = { title: "Locales" };
+export const metadata = { title: "Establecimientos" };
 
 export default async function AdminLocalesPage() {
   const profile = await getProfile();
@@ -17,7 +17,7 @@ export default async function AdminLocalesPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Mis locales</h1>
+          <h1 className="text-2xl font-semibold">Mis establecimientos</h1>
           <p className="text-sm text-muted-foreground">
             Crea el establecimiento (dirección, servicios) y luego agrega cada
             cancha en &quot;Canchas&quot;.
@@ -61,7 +61,8 @@ export default async function AdminLocalesPage() {
         ))}
         {venues.length === 0 && (
           <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            Aún no tienes locales. Crea uno para poder registrar canchas.
+            Aún no tienes establecimientos. Crea uno para poder registrar
+            canchas.
           </div>
         )}
       </div>

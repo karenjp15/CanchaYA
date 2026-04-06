@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const venueFormSchema = z.object({
-  name: z.string().min(2, "Nombre del local requerido"),
+  name: z.string().min(2, "Nombre del establecimiento requerido"),
   address: z.string().min(3, "Dirección requerida"),
   parkingAvailable: z.coerce.boolean(),
   sellsLiquor: z.coerce.boolean(),

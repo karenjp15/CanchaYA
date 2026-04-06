@@ -45,7 +45,7 @@ export function VenueFormDialog({ mode, venue }: Props) {
         render={
           mode === "create" ? (
             <Button className="gap-1.5">
-              <Plus className="size-4" /> Nuevo local
+              <Plus className="size-4" /> Nuevo establecimiento
             </Button>
           ) : (
             <Button variant="ghost" size="icon-sm">
@@ -57,11 +57,11 @@ export function VenueFormDialog({ mode, venue }: Props) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Crear local" : "Editar local"}
+            {mode === "create" ? "Crear establecimiento" : "Editar establecimiento"}
           </DialogTitle>
           <DialogDescription>
             {mode === "create"
-              ? "Nombre del establecimiento, dirección y servicios. Luego agrega las canchas dentro de este local."
+              ? "Nombre del establecimiento, dirección y servicios. Luego agrega las canchas dentro de este establecimiento."
               : `Editando: ${venue?.name}`}
           </DialogDescription>
         </DialogHeader>
@@ -84,7 +84,7 @@ export function VenueFormDialog({ mode, venue }: Props) {
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="vn-name">Nombre del local</FieldLabel>
+              <FieldLabel htmlFor="vn-name">Nombre del establecimiento</FieldLabel>
               <FieldContent>
                 <Input
                   id="vn-name"
@@ -202,7 +202,11 @@ export function VenueFormDialog({ mode, venue }: Props) {
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>
-              {pending ? "Guardando…" : mode === "create" ? "Crear local" : "Guardar"}
+              {pending
+                ? "Guardando…"
+                : mode === "create"
+                  ? "Crear establecimiento"
+                  : "Guardar"}
             </Button>
           </DialogFooter>
         </form>

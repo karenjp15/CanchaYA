@@ -1,5 +1,6 @@
 "use server";
 
+import { debugAgentLogServer } from "@/lib/debug-agent-log-server";
 import { createServerActionClient } from "@/lib/supabase/server";
 import { resolvePostAuthPath } from "@/lib/auth/profile";
 import { safeInternalPath } from "@/lib/auth/paths";
@@ -11,18 +12,14 @@ export type AuthActionState = {
   message?: string;
 };
 
-/** Comprueba env en línea (evita helpers/import en el mismo archivo "use server": el bundler puede romper el closure de cada acción). */
-function supabaseConfigured(): boolean {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  return Boolean(url && key);
-}
-
 export async function signInWithPassword(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  if (!supabaseConfigured()) {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+  ) {
     return { error: "config" };
   }
 
@@ -47,6 +44,15 @@ export async function signInWithPassword(
   });
 
   if (error) {
+    // #region agent log
+    debugAgentLogServer({
+      hypothesisId: "H-login",
+      location: "auth.ts:signInWithPassword",
+      message: "signInWithPassword returned error",
+      runId: "verify",
+      data: { code: error.message === "Invalid login credentials" ? "invalid_creds" : "other" },
+    });
+    // #endregion
     return {
       error:
         error.message === "Invalid login credentials"
@@ -58,13 +64,33 @@ export async function signInWithPassword(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "No se pudo iniciar sesión" };
+  if (!user) {
+    // #region agent log
+    debugAgentLogServer({
+      hypothesisId: "H-login",
+      location: "auth.ts:getUser-after-signin",
+      message: "no user after signIn",
+      runId: "verify",
+      data: {},
+    });
+    // #endregion
+    return { error: "No se pudo iniciar sesión" };
+  }
 
   const rawNext = formData.get("next");
   const path = await resolvePostAuthPath(
     user.id,
     typeof rawNext === "string" ? rawNext : null,
   );
+  // #region agent log
+  debugAgentLogServer({
+    hypothesisId: "H-login",
+    location: "auth.ts:redirect",
+    message: "login ok, redirecting",
+    runId: "verify",
+    data: { pathLen: path.length },
+  });
+  // #endregion
   redirect(path);
 }
 
@@ -94,7 +120,10 @@ export async function signUpWithPassword(
     return { error: first };
   }
 
-  if (missingSupabaseEnv()) {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+  ) {
     return { error: "config" };
   }
 
@@ -132,12 +161,17 @@ export async function signInWithGoogle(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  if (missingSupabaseEnv()) {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+    || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+  ) {
     return { error: "config" };
   }
 
   const supabase = await createServerActionClient();
-  const callback = new URL("/auth/callback", siteOrigin());
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  const callback = new URL("/auth/callback", siteUrl);
   const rawNext = formData.get("next");
   if (typeof rawNext === "string" && rawNext.trim().length > 0) {
     callback.searchParams.set("next", safeInternalPath(rawNext));
@@ -153,14 +187,4 @@ export async function signInWithGoogle(
   if (error) return { error: error.message };
   if (data.url) redirect(data.url);
   return { error: "No se pudo iniciar con Google" };
-}
-
-export async function signOut(): Promise<void> {
-  if (missingSupabaseEnv()) {
-    redirect("/");
-  }
-
-  const supabase = await createServerActionClient();
-  await supabase.auth.signOut();
-  redirect("/");
 }

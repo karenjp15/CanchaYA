@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { LogOut, LogIn, Sun, Moon } from "lucide-react";
-import { signOut } from "@/actions/auth";
+import { signOut } from "@/actions/sign-out";
 import { Button } from "@/components/ui/button";
 import { appShellClassName } from "@/lib/layout-classes";
 

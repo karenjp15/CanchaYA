@@ -6,7 +6,7 @@ import {
   deleteAccount,
   type ProfileActionState,
 } from "@/actions/profile";
-import { signOut } from "@/actions/auth";
+import { signOut } from "@/actions/sign-out";
 import { Button } from "@/components/ui/button";
 import {
   Card,

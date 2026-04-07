@@ -10,7 +10,7 @@ import {
   Users,
   LogOut,
 } from "lucide-react";
-import { signOut } from "@/actions/auth";
+import { signOut } from "@/actions/sign-out";
 import { Button } from "@/components/ui/button";
 
 const navItems = [

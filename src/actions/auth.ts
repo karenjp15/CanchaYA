@@ -17,6 +17,21 @@ export async function signInWithPassword(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  // #region agent log
+  debugAgentLogServer({
+    hypothesisId: "H-login",
+    location: "auth.ts:signInWithPassword:entry",
+    message: "action invoked",
+    runId: "verify",
+    data: {
+      envConfigured: Boolean(
+        process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+          && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
+      ),
+      hasEmailField: formData.get("email") != null,
+    },
+  });
+  // #endregion
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
     || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()

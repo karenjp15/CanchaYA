@@ -46,6 +46,8 @@ export function debugAgentLogServer(entry: {
   const line = JSON.stringify({
     sessionId: "8117cf",
     timestamp: Date.now(),
+    diagCwd: process.cwd(),
+    diagPkgRoot: findPackageRoot(process.cwd()),
     ...entry,
   });
   let wrote = false;

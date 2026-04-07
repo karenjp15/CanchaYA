@@ -1,6 +1,5 @@
 "use server";
 
-import { debugAgentLogServer } from "@/lib/debug-agent-log-server";
 import { createServerActionClient } from "@/lib/supabase/server";
 import { resolvePostAuthPath } from "@/lib/auth/profile";
 import { safeInternalPath } from "@/lib/auth/paths";
@@ -64,33 +63,13 @@ export async function signInWithPassword(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    // #region agent log
-    debugAgentLogServer({
-      hypothesisId: "H-login",
-      location: "auth.ts:getUser-after-signin",
-      message: "no user after signIn",
-      runId: "verify",
-      data: {},
-    });
-    // #endregion
-    return { error: "No se pudo iniciar sesión" };
-  }
+  if (!user) return { error: "No se pudo iniciar sesión" };
 
   const rawNext = formData.get("next");
   const path = await resolvePostAuthPath(
     user.id,
     typeof rawNext === "string" ? rawNext : null,
   );
-  // #region agent log
-  debugAgentLogServer({
-    hypothesisId: "H-login",
-    location: "auth.ts:redirect",
-    message: "login ok, redirecting",
-    runId: "verify",
-    data: { pathLen: path.length },
-  });
-  // #endregion
   redirect(path);
 }
 

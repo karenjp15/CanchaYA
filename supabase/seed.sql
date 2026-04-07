@@ -54,12 +54,12 @@ BEGIN
       sells_liquor
     )
     VALUES
-      (v_admin_id, 'Cancha Pepito Pérez', 'Cra 1aa #65-15, Bogotá', 4.6482, -74.0748, true, true),
-      (v_admin_id, 'Cancha Pablito', 'Calle 80 #23-10, Bogotá', 4.6702, -74.0888, false, false),
-      (v_admin_id, 'Cancha Rochela', 'Av. Suba #115-30, Bogotá', 4.7128, -74.0658, true, false),
-      (v_admin_id, 'Complejo Norte FC', 'Cra 7 #172-50, Bogotá', 4.7451, -74.0328, true, true),
-      (v_admin_id, 'Estadio El Dorado 5', 'Calle 26 #78-30, Bogotá', 4.6585, -74.1100, true, true),
-      (v_admin_id, 'La Cantera', 'Cra 68 #45-20, Bogotá', 4.6395, -74.0985, false, true);
+      (v_admin_id, 'futbol116', 'Cra 1aa #65-15, Bogotá', 4.6482, -74.0748, true, true),
+      (v_admin_id, 'soccer10', 'Calle 80 #23-10, Bogotá', 4.6702, -74.0888, false, false),
+      (v_admin_id, 'arena7bogota', 'Av. Suba #115-30, Bogotá', 4.7128, -74.0658, true, false),
+      (v_admin_id, 'nordFutbol22', 'Cra 7 #172-50, Bogotá', 4.7451, -74.0328, true, true),
+      (v_admin_id, 'gol26hub', 'Calle 26 #78-30, Bogotá', 4.6585, -74.1100, true, true),
+      (v_admin_id, 'urbanKick68', 'Cra 68 #45-20, Bogotá', 4.6395, -74.0985, false, true);
 
     INSERT INTO public.fields (
       owner_id,
@@ -84,12 +84,12 @@ BEGIN
       true
     FROM (
       VALUES
-        ('Cancha Pepito Pérez', 'Fútbol 6', 'F6', 'ROOFED', 210000, '/fields/field-1.jpg'),
-        ('Cancha Pablito', 'Fútbol 5', 'F5', 'OPEN', 90000, '/fields/field-2.jpg'),
-        ('Cancha Rochela', 'Fútbol 7', 'F7', 'ROOFED', 150000, '/fields/field-3.jpg'),
-        ('Complejo Norte FC', 'Fútbol 8', 'F8', 'OPEN', 250000, '/fields/field-4.jpg'),
-        ('Estadio El Dorado 5', 'Fútbol 11', 'F11', 'OPEN', 420000, '/fields/field-5.jpg'),
-        ('La Cantera', 'Fútbol 6', 'F6', 'ROOFED', 180000, '/fields/field-6.jpg')
+        ('futbol116', 'Cancha F6', 'F6', 'ROOFED', 210000, '/fields/field-1.jpg'),
+        ('soccer10', 'Cancha F5', 'F5', 'OPEN', 90000, '/fields/field-2.jpg'),
+        ('arena7bogota', 'Cancha F7', 'F7', 'ROOFED', 150000, '/fields/field-3.jpg'),
+        ('nordFutbol22', 'Cancha F8', 'F8', 'OPEN', 250000, '/fields/field-4.jpg'),
+        ('gol26hub', 'Cancha F11', 'F11', 'OPEN', 420000, '/fields/field-5.jpg'),
+        ('urbanKick68', 'Cancha F6', 'F6', 'ROOFED', 180000, '/fields/field-6.jpg')
     ) AS d(venue_name, name, field_type, surface, hourly_price, image_url)
     JOIN public.venues v ON v.owner_id = v_admin_id AND v.name = d.venue_name;
 
@@ -104,16 +104,16 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.bookings WHERE user_id = v_player_id LIMIT 1) THEN
     SELECT f.id INTO v_field1 FROM public.fields f
     INNER JOIN public.venues v ON v.id = f.venue_id AND v.owner_id = v_admin_id
-    WHERE v.name = 'Cancha Pepito Pérez' AND f.name = 'Fútbol 6' LIMIT 1;
+    WHERE v.name = 'futbol116' AND f.name = 'Cancha F6' LIMIT 1;
     SELECT f.id INTO v_field2 FROM public.fields f
     INNER JOIN public.venues v ON v.id = f.venue_id AND v.owner_id = v_admin_id
-    WHERE v.name = 'Cancha Pablito' AND f.name = 'Fútbol 5' LIMIT 1;
+    WHERE v.name = 'soccer10' AND f.name = 'Cancha F5' LIMIT 1;
     SELECT f.id INTO v_field3 FROM public.fields f
     INNER JOIN public.venues v ON v.id = f.venue_id AND v.owner_id = v_admin_id
-    WHERE v.name = 'Cancha Rochela' AND f.name = 'Fútbol 7' LIMIT 1;
+    WHERE v.name = 'arena7bogota' AND f.name = 'Cancha F7' LIMIT 1;
     SELECT f.id INTO v_field4 FROM public.fields f
     INNER JOIN public.venues v ON v.id = f.venue_id AND v.owner_id = v_admin_id
-    WHERE v.name = 'Complejo Norte FC' AND f.name = 'Fútbol 8' LIMIT 1;
+    WHERE v.name = 'nordFutbol22' AND f.name = 'Cancha F8' LIMIT 1;
 
     INSERT INTO public.bookings (user_id, field_id, start_time, end_time, total_price, status, payment_method, billing_first_name, billing_last_name, billing_email, billing_phone, id_document_type, id_number)
     VALUES

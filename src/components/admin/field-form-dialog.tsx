@@ -29,6 +29,14 @@ type Props = {
   mode: "create" | "edit";
   field?: FieldRow;
   venues: Venue[];
+  /** Valor inicial del desplegable de establecimiento (solo creación, sin `fixedVenueId`). */
+  defaultVenueId?: string;
+  /** Si se define, la cancha se crea solo en ese local (sin desplegable). */
+  fixedVenueId?: string;
+  /** Texto del botón en modo crear (por defecto "Nueva cancha"). */
+  createButtonLabel?: string;
+  /** Variante del botón disparador en modo crear. */
+  createButtonVariant?: "default" | "outline" | "secondary" | "ghost";
 };
 
 const FIELD_TYPES = ["F5", "F6", "F7", "F8", "F11"] as const;
@@ -39,7 +47,15 @@ const SURFACES = [
 
 const initial: FieldActionState = {};
 
-export function FieldFormDialog({ mode, field, venues }: Props) {
+export function FieldFormDialog({
+  mode,
+  field,
+  venues,
+  defaultVenueId,
+  fixedVenueId,
+  createButtonLabel,
+  createButtonVariant = "default",
+}: Props) {
   const action = mode === "create" ? createField : updateField;
   const [state, formAction, pending] = useActionState(action, initial);
   const [open, setOpen] = useState(false);
@@ -47,6 +63,15 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
     field?.image_url ?? null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fixedVenue =
+    fixedVenueId != null
+      ? venues.find((v) => v.id === fixedVenueId)
+      : undefined;
+  const selectDefault =
+    fixedVenueId != null
+      ? fixedVenueId
+      : (defaultVenueId ?? venues[0]?.id ?? "");
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -65,8 +90,9 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
       <DialogTrigger
         render={
           mode === "create" ? (
-            <Button className="gap-1.5">
-              <Plus className="size-4" /> Nueva cancha
+            <Button variant={createButtonVariant} className="gap-1.5">
+              <Plus className="size-4" />{" "}
+              {createButtonLabel ?? "Nueva cancha"}
             </Button>
           ) : (
             <Button variant="ghost" size="icon-sm">
@@ -104,7 +130,25 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
           )}
 
           <FieldGroup>
-            {mode === "create" && (
+            {mode === "create" && fixedVenueId != null && (
+              <>
+                <input type="hidden" name="venueId" value={fixedVenueId} />
+                <Field>
+                  <FieldLabel>Establecimiento</FieldLabel>
+                  <FieldContent>
+                    <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+                      {fixedVenue?.name ?? "Local seleccionado"}
+                      {fixedVenue?.address ? (
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          {fixedVenue.address}
+                        </span>
+                      ) : null}
+                    </p>
+                  </FieldContent>
+                </Field>
+              </>
+            )}
+            {mode === "create" && fixedVenueId == null && (
               <Field>
                 <FieldLabel htmlFor="af-venue">Establecimiento</FieldLabel>
                 <FieldContent>
@@ -113,7 +157,7 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
                     name="venueId"
                     required
                     className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-                    defaultValue={venues[0]?.id ?? ""}
+                    defaultValue={selectDefault}
                   >
                     {venues.length === 0 ? (
                       <option value="">Crea un establecimiento primero</option>
@@ -137,7 +181,7 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
                   id="af-name"
                   name="name"
                   required
-                  placeholder="Ej. Cancha sintética F6"
+                  placeholder="Ej. Cancha F8"
                   defaultValue={field?.name ?? ""}
                 />
               </FieldContent>
@@ -273,7 +317,13 @@ export function FieldFormDialog({ mode, field, venues }: Props) {
             <Button
               type="submit"
               disabled={
-                pending || (mode === "create" && venues.length === 0)
+                pending
+                || (mode === "create"
+                  && venues.length === 0
+                  && fixedVenueId == null)
+                || (mode === "create"
+                  && fixedVenueId != null
+                  && !fixedVenue)
               }
             >
               {pending

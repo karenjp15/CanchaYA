@@ -42,7 +42,7 @@ export default async function AdminCanchasPage() {
         )}
       </div>
 
-      <FieldsTable fields={fields} venues={venues} />
+      <FieldsTable fields={fields} venues={venues} groupByVenue />
     </div>
   );
 }

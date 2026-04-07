@@ -41,9 +41,17 @@ export async function updateSession(
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return { response: supabaseResponse, user, supabase };
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return { response: supabaseResponse, user, supabase };
+  } catch {
+    /* Red caída, DNS, sandbox Edge, etc.: no tumbar toda la petición */
+    return {
+      response: supabaseResponse,
+      user: null,
+      supabase: null,
+    };
+  }
 }

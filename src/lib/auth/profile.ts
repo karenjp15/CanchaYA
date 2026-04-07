@@ -2,7 +2,6 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { safeInternalPath } from "@/lib/auth/paths";
-import { agentLog } from "@/lib/debug-agent-log";
 import type { Database } from "@/types/database.types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -37,25 +36,11 @@ export async function resolvePostAuthPath(
   const next = safeInternalPath(hasExplicit ? nextParam : null);
 
   const supabase = await createClient();
-  const { data: profile, error: profileErr } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userId)
     .maybeSingle();
-
-  // #region agent log
-  agentLog({
-    location: "profile.ts:resolvePostAuthPath",
-    message: "profile for post-auth path",
-    hypothesisId: "D",
-    data: {
-      hasExplicit,
-      role: profile?.role ?? null,
-      profileError: profileErr?.message ?? null,
-      next,
-    },
-  });
-  // #endregion
 
   if (profile?.role === "ADMIN" && !hasExplicit) {
     return "/admin/dashboard";

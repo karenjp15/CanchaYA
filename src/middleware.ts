@@ -1,25 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { agentLog } from "@/lib/debug-agent-log";
 
 export async function middleware(request: NextRequest) {
   const { response, user, supabase } = await updateSession(request);
   const path = request.nextUrl.pathname;
-
-  if (path.startsWith("/login") || path.startsWith("/admin")) {
-    // #region agent log
-    agentLog({
-      location: "middleware.ts:session",
-      message: "middleware session snapshot",
-      hypothesisId: "C",
-      data: {
-        path,
-        hasUser: Boolean(user),
-        hasSupabaseClient: Boolean(supabase),
-      },
-    });
-    // #endregion
-  }
 
   if (path.startsWith("/user")) {
     if (!user) {

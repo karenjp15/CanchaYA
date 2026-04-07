@@ -1,5 +1,7 @@
 "use server";
 
+import { signOut as runSignOut } from "@/actions/sign-out";
+import { debugAgentLogServer } from "@/lib/debug-agent-log-server";
 import { createServerActionClient } from "@/lib/supabase/server";
 import { resolvePostAuthPath } from "@/lib/auth/profile";
 import { safeInternalPath } from "@/lib/auth/paths";
@@ -43,15 +45,6 @@ export async function signInWithPassword(
   });
 
   if (error) {
-    // #region agent log
-    debugAgentLogServer({
-      hypothesisId: "H-login",
-      location: "auth.ts:signInWithPassword",
-      message: "signInWithPassword returned error",
-      runId: "verify",
-      data: { code: error.message === "Invalid login credentials" ? "invalid_creds" : "other" },
-    });
-    // #endregion
     return {
       error:
         error.message === "Invalid login credentials"
@@ -70,6 +63,15 @@ export async function signInWithPassword(
     user.id,
     typeof rawNext === "string" ? rawNext : null,
   );
+  // #region agent log
+  debugAgentLogServer({
+    hypothesisId: "H-login",
+    location: "auth.ts:signInWithPassword",
+    message: "login ok, redirecting",
+    runId: "verify",
+    data: { pathLen: path.length },
+  });
+  // #endregion
   redirect(path);
 }
 
@@ -166,4 +168,9 @@ export async function signInWithGoogle(
   if (error) return { error: error.message };
   if (data.url) redirect(data.url);
   return { error: "No se pudo iniciar con Google" };
+}
+
+/** Delegación válida en Next 16 (no usar `export { x } from` en `"use server"`). */
+export async function signOut(): Promise<void> {
+  return runSignOut();
 }

@@ -39,11 +39,7 @@ type Props = {
   createButtonVariant?: "default" | "outline" | "secondary" | "ghost";
 };
 
-const FIELD_TYPES = ["F5", "F6", "F7", "F8", "F11"] as const;
-const SURFACES = [
-  { value: "ROOFED", label: "Techo" },
-  { value: "OPEN", label: "Abierta" },
-] as const;
+const FOOTBALL_CAPS = ["F5", "F7", "F9", "F11"] as const;
 
 const initial: FieldActionState = {};
 
@@ -59,6 +55,9 @@ export function FieldFormDialog({
   const action = mode === "create" ? createField : updateField;
   const [state, formAction, pending] = useActionState(action, initial);
   const [open, setOpen] = useState(false);
+  const [sport, setSport] = useState<"PADEL" | "FUTBOL">(
+    field?.sport ?? "FUTBOL",
+  );
   const [imagePreview, setImagePreview] = useState<string | null>(
     field?.image_url ?? null,
   );
@@ -108,7 +107,7 @@ export function FieldFormDialog({
           </DialogTitle>
           <DialogDescription>
             {mode === "create"
-              ? "Elige el establecimiento y define tipo, superficie y precio de esta cancha."
+              ? "Define deporte (pádel o fútbol), atributos de la pista y precio por hora."
               : `Editando: ${field?.name}`}
           </DialogDescription>
         </DialogHeader>
@@ -245,58 +244,208 @@ export function FieldFormDialog({
               )}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <span className="text-sm font-medium">Tipo</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {FIELD_TYPES.map((t) => (
-                    <label
-                      key={t}
-                      className={cn(
-                        "flex cursor-pointer items-center justify-center rounded-lg border-2 border-border px-2.5 py-1.5 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="fieldType"
-                        value={t}
-                        defaultChecked={
-                          field ? field.field_type === t : t === "F5"
-                        }
-                        className="sr-only"
-                      />
-                      {t}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <span className="text-sm font-medium">Superficie</span>
-                <div className="flex gap-2">
-                  {SURFACES.map((s) => (
-                    <label
-                      key={s.value}
-                      className={cn(
-                        "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-1.5 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="surface"
-                        value={s.value}
-                        defaultChecked={
-                          field
-                            ? field.surface === s.value
-                            : s.value === "ROOFED"
-                        }
-                        className="sr-only"
-                      />
-                      {s.label}
-                    </label>
-                  ))}
-                </div>
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Deporte</span>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    { value: "FUTBOL" as const, label: "Fútbol" },
+                    { value: "PADEL" as const, label: "Pádel" },
+                  ] as const
+                ).map((s) => (
+                  <label
+                    key={s.value}
+                    className={cn(
+                      "flex cursor-pointer items-center justify-center rounded-lg border-2 border-border px-3 py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="sport"
+                      value={s.value}
+                      checked={sport === s.value}
+                      onChange={() => setSport(s.value)}
+                      className="sr-only"
+                    />
+                    {s.label}
+                  </label>
+                ))}
               </div>
             </div>
+
+            {sport === "FUTBOL" ? (
+              <>
+                <input type="hidden" name="slotDurationMinutes" value="60" />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium">Capacidad</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {FOOTBALL_CAPS.map((t) => (
+                        <label
+                          key={t}
+                          className={cn(
+                            "flex cursor-pointer items-center justify-center rounded-lg border-2 border-border px-2.5 py-1.5 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="footballCapacity"
+                            value={t}
+                            defaultChecked={
+                              field
+                                ? field.football_capacity === t
+                                : t === "F5"
+                            }
+                            className="sr-only"
+                          />
+                          {t}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium">Superficie</span>
+                    <div className="flex flex-col gap-2">
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border-2 border-border px-3 py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="footballSurface"
+                          value="SYNTHETIC_GRASS"
+                          defaultChecked={
+                            field
+                              ? field.football_surface === "SYNTHETIC_GRASS"
+                              : true
+                          }
+                          className="sr-only"
+                        />
+                        Grama sintética
+                      </label>
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border-2 border-border px-3 py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="footballSurface"
+                          value="NATURAL_GRASS"
+                          defaultChecked={
+                            field?.football_surface === "NATURAL_GRASS"
+                          }
+                          className="sr-only"
+                        />
+                        Grama natural
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <FieldLabel htmlFor="af-slot-dur">Duración estándar</FieldLabel>
+                  <FieldContent>
+                    <select
+                      id="af-slot-dur"
+                      name="slotDurationMinutes"
+                      defaultValue={String(
+                        field?.slot_duration_minutes === 60 ? 60 : 90,
+                      )}
+                      className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+                    >
+                      <option value="60">60 minutos</option>
+                      <option value="90">90 minutos</option>
+                    </select>
+                  </FieldContent>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium">Cerramiento</span>
+                    <div className="flex gap-2">
+                      <label
+                        className={cn(
+                          "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="padelWall"
+                          value="GLASS"
+                          defaultChecked={
+                            field
+                              ? field.padel_wall_material === "GLASS"
+                              : true
+                          }
+                          className="sr-only"
+                        />
+                        Cristal
+                      </label>
+                      <label
+                        className={cn(
+                          "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="padelWall"
+                          value="WALL"
+                          defaultChecked={
+                            field?.padel_wall_material === "WALL"
+                          }
+                          className="sr-only"
+                        />
+                        Muro
+                      </label>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium">Ubicación</span>
+                    <div className="flex gap-2">
+                      <label
+                        className={cn(
+                          "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="padelLocation"
+                          value="INDOOR"
+                          defaultChecked={
+                            field
+                              ? field.padel_location === "INDOOR"
+                              : false
+                          }
+                          className="sr-only"
+                        />
+                        Indoor
+                      </label>
+                      <label
+                        className={cn(
+                          "flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-border py-2 text-xs font-medium transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/10",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="padelLocation"
+                          value="OUTDOOR"
+                          defaultChecked={
+                            field
+                              ? field.padel_location === "OUTDOOR"
+                              : true
+                          }
+                          className="sr-only"
+                        />
+                        Outdoor
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <Field>
               <FieldLabel htmlFor="af-price">Precio / hora (COP)</FieldLabel>

@@ -5,7 +5,8 @@ import { getVenuesWithFieldsForOwner } from "@/lib/data/venues-with-fields";
 import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Car, Wine } from "lucide-react";
-import { FIELD_TYPE_LABELS } from "@/lib/constants";
+import { FOOTBALL_SURFACE_LABELS, SPORT_LABELS } from "@/lib/constants";
+import { fieldSportDetailLine } from "@/lib/field-display";
 import Link from "next/link";
 
 export const metadata = { title: "Establecimientos" };
@@ -32,7 +33,7 @@ export default async function AdminLocalesPage() {
           <h1 className="text-2xl font-semibold">Mis establecimientos</h1>
           <p className="text-sm text-muted-foreground">
             Cada establecimiento es el lugar (dirección y servicios). Dentro
-            registras las canchas (F5, F6, etc.). También puedes gestionarlas
+            registras las canchas (pádel o fútbol). También puedes gestionarlas
             en{" "}
             <Link
               href="/admin/canchas"
@@ -112,7 +113,7 @@ export default async function AdminLocalesPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium">{f.name}</span>
                           <Badge variant="outline" className="text-[10px]">
-                            {FIELD_TYPE_LABELS[f.field_type]}
+                            {SPORT_LABELS[f.sport]}
                           </Badge>
                           <Badge
                             variant={f.is_active ? "default" : "secondary"}
@@ -122,13 +123,17 @@ export default async function AdminLocalesPage() {
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {formatCOP(Number(f.hourly_price))} / h ·{" "}
-                          {f.surface === "ROOFED" ? "Techo" : "Abierta"}
+                          {fieldSportDetailLine(f)}
+                          {f.sport === "FUTBOL" && f.football_surface
+                            ? ` · ${FOOTBALL_SURFACE_LABELS[f.football_surface]}`
+                            : ""}{" "}
+                          · {formatCOP(Number(f.hourly_price))}/h ·{" "}
+                          {f.slot_duration_minutes} min
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <Link
-                          href={`/canchas/${f.id}`}
+                          href={`/canchas/${f.id}?sport=${f.sport}`}
                           className="text-xs font-medium text-primary underline-offset-2 hover:underline"
                         >
                           Ver público

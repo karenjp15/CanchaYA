@@ -7,7 +7,7 @@ import { Search, CalendarDays, User } from "lucide-react";
 
 const navItems = [
   { href: "/user/perfil", label: "Perfil", icon: User },
-  { href: "/explorar", label: "Explorar", icon: Search },
+  { href: "/explorar?sport=FUTBOL", label: "Explorar", icon: Search },
   { href: "/user/reservas", label: "Reservas", icon: CalendarDays },
 ] as const;
 
@@ -25,7 +25,7 @@ export function AppLeftNav() {
       {/* Marca: solo escritorio, armonizada con el rail */}
       <div className="hidden shrink-0 border-b border-border/70 bg-gradient-to-br from-primary/[0.06] via-transparent to-warning/[0.06] px-4 py-5 md:block">
         <Link
-          href="/explorar"
+          href="/explorar?sport=FUTBOL"
           className="group flex items-center gap-3 rounded-xl p-2 -m-2 outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-warning text-base font-bold text-primary-foreground shadow-sm ring-1 ring-primary/20 transition-transform group-hover:scale-[1.02]">
@@ -50,7 +50,9 @@ export function AppLeftNav() {
         )}
       >
         {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname.startsWith(href);
+          const base = href.split("?")[0] ?? href;
+          const active =
+            pathname === base || pathname.startsWith(`${base}/`);
           return (
             <Link
               key={href}

@@ -1,20 +1,49 @@
-import type { FieldType } from "@/types/database.types";
+import type {
+  FootballCapacity,
+  PadelCourtLocation,
+  PadelWallMaterial,
+  SportType,
+} from "@/types/database.types";
 
 /** Zona horaria única del producto (reservas, slots, UI). */
 export const APP_TIMEZONE = "America/Bogota" as const;
 
-export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
+export const SPORT_LABELS: Record<SportType, string> = {
+  PADEL: "Pádel",
+  FUTBOL: "Fútbol",
+};
+
+/** Paso de la rejilla de horarios (minutos). */
+export const SLOT_GRID_STEP_MINUTES = 30;
+
+export const FOOTBALL_CAPACITY_LABELS: Record<FootballCapacity, string> = {
   F5: "Fútbol 5",
-  F6: "Fútbol 6",
   F7: "Fútbol 7",
-  F8: "Fútbol 8",
+  F9: "Fútbol 9 (full)",
   F11: "Fútbol 11",
 };
 
-export const FIELD_TYPE_PLAYERS: Record<FieldType, string> = {
+export const FOOTBALL_CAPACITY_PLAYERS: Record<FootballCapacity, string> = {
   F5: "10",
-  F6: "12",
   F7: "14",
-  F8: "16",
+  F9: "18",
   F11: "22",
+};
+
+export const FOOTBALL_SURFACE_LABELS: Record<
+  "SYNTHETIC_GRASS" | "NATURAL_GRASS",
+  string
+> = {
+  SYNTHETIC_GRASS: "Grama sintética",
+  NATURAL_GRASS: "Grama natural",
+};
+
+export const PADEL_WALL_LABELS: Record<PadelWallMaterial, string> = {
+  GLASS: "Cristal",
+  WALL: "Muro",
+};
+
+export const PADEL_LOCATION_LABELS: Record<PadelCourtLocation, string> = {
+  INDOOR: "Indoor",
+  OUTDOOR: "Outdoor",
 };

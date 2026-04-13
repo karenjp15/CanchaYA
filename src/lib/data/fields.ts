@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Venue } from "@/lib/data/venues";
+import { fetchPricingWindowsForFields } from "@/lib/data/field-pricing-data";
+import type { FootballCapacity, SportType } from "@/types/database.types";
 import type { Field, FieldRow } from "./field-model";
 
 export type { Field, FieldRow } from "./field-model";
@@ -51,8 +53,53 @@ function attachVenues(rows: FieldRow[], map: Map<string, Venue>): Field[] {
     .filter((r): r is Field => r !== null);
 }
 
+async function attachPricingWindows(
+  supabase: SupabaseServer,
+  fields: Field[],
+): Promise<Field[]> {
+  if (fields.length === 0) return fields;
+  const winMap = await fetchPricingWindowsForFields(
+    supabase,
+    fields.map((f) => f.id),
+  );
+  return fields.map((f) => ({
+    ...f,
+    pricing_windows: winMap.get(f.id) ?? [],
+  }));
+}
+
+/** Recuenta canchas activas por club (incluye productos no listados en explorar). */
+export async function getActiveFieldCountsByVenue(
+  venueIds: string[],
+  sport?: SportType,
+): Promise<Map<string, number>> {
+  const unique = [...new Set(venueIds.filter(Boolean))];
+  if (unique.length === 0) return new Map();
+
+  const supabase = await createClient();
+  let q = supabase
+    .from("fields")
+    .select("venue_id")
+    .eq("is_active", true)
+    .in("venue_id", unique);
+  if (sport) q = q.eq("sport", sport);
+  const { data, error } = await q;
+
+  if (error) throw new Error(error.message);
+
+  const map = new Map<string, number>();
+  for (const id of unique) map.set(id, 0);
+  for (const row of data ?? []) {
+    const vid = row.venue_id;
+    map.set(vid, (map.get(vid) ?? 0) + 1);
+  }
+  return map;
+}
+
 export async function getActiveFields(filters?: {
-  type?: string;
+  sport?: SportType;
+  /** Capacidad fútbol (F5 / F7 / F11). Acepta legacy `type` en UI. */
+  capacity?: FootballCapacity;
   parking?: string;
   liquor?: string;
 }) {
@@ -74,9 +121,21 @@ export async function getActiveFields(filters?: {
 
   let rows = attachVenues(fieldRows, map);
 
-  if (filters?.type && ["F5", "F6", "F7", "F8", "F11"].includes(filters.type)) {
-    rows = rows.filter((f) => f.field_type === filters.type);
+  const sport = filters?.sport ?? "FUTBOL";
+  rows = rows.filter((f) => f.sport === sport);
+
+  if (
+    filters?.capacity &&
+    ["F5", "F7", "F9", "F11"].includes(filters.capacity)
+  ) {
+    rows = rows.filter(
+      (f) =>
+        f.sport === "FUTBOL" && f.football_capacity === filters.capacity,
+    );
   }
+
+  rows = rows.filter((f) => f.list_in_explore ?? true);
+
   if (filters?.parking === "1") {
     rows = rows.filter((f) => f.venues.parking_available);
   }
@@ -90,7 +149,7 @@ export async function getActiveFields(filters?: {
     rows = rows.filter((f) => !f.venues.sells_liquor);
   }
 
-  return rows;
+  return attachPricingWindows(supabase, rows);
 }
 
 export async function getAllFieldsByOwner(ownerId: string): Promise<Field[]> {
@@ -110,7 +169,25 @@ export async function getAllFieldsByOwner(ownerId: string): Promise<Field[]> {
     fieldRows.map((f) => f.venue_id),
   );
 
-  return attachVenues(fieldRows, map);
+  return attachPricingWindows(supabase, attachVenues(fieldRows, map));
+}
+
+/** Todas las canchas activas de un club (incluye productos solo en ficha del club, ej. F9). */
+export async function getFieldsForVenue(venueId: string): Promise<Field[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("fields")
+    .select("*")
+    .eq("venue_id", venueId)
+    .eq("is_active", true)
+    .order("name");
+
+  if (error) throw new Error(error.message);
+
+  const fieldRows = (data ?? []) as FieldRow[];
+  const map = await loadVenueMap(supabase, [venueId]);
+  return attachPricingWindows(supabase, attachVenues(fieldRows, map));
 }
 
 export async function getFieldById(id: string): Promise<Field | null> {
@@ -128,5 +205,7 @@ export async function getFieldById(id: string): Promise<Field | null> {
   const map = await loadVenueMap(supabase, [field.venue_id]);
   const v = map.get(field.venue_id);
   if (!v) return null;
-  return { ...field, venues: v };
+  const base: Field = { ...field, venues: v };
+  const [withPw] = await attachPricingWindows(supabase, [base]);
+  return withPw ?? base;
 }

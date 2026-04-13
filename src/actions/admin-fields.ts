@@ -1,8 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { replacePricingWindowsSingleBand } from "@/lib/data/field-pricing-data";
 import { fieldCreateSchema, fieldUpdateSchema } from "@/lib/schemas/field";
+import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
+
+type FieldInsert = Database["public"]["Tables"]["fields"]["Insert"];
 
 export type FieldActionState = {
   error?: string;
@@ -30,6 +34,45 @@ async function uploadFieldImage(
   return publicUrl;
 }
 
+function buildFieldPayload(
+  parsed: {
+    name: string;
+    description?: string;
+    hourlyPrice: number;
+    sport: "PADEL" | "FUTBOL";
+    slotDurationMinutes: number;
+    footballCapacity?: "F5" | "F7" | "F9" | "F11";
+    footballSurface?: "SYNTHETIC_GRASS" | "NATURAL_GRASS";
+    padelWall?: "GLASS" | "WALL";
+    padelLocation?: "INDOOR" | "OUTDOOR";
+  },
+): Omit<FieldInsert, "owner_id" | "venue_id" | "id"> {
+  if (parsed.sport === "FUTBOL") {
+    return {
+      name: parsed.name,
+      description: parsed.description ?? null,
+      hourly_price: parsed.hourlyPrice.toFixed(2),
+      sport: parsed.sport,
+      slot_duration_minutes: parsed.slotDurationMinutes,
+      football_capacity: parsed.footballCapacity ?? null,
+      football_surface: parsed.footballSurface ?? null,
+      padel_wall_material: null,
+      padel_location: null,
+    };
+  }
+  return {
+    name: parsed.name,
+    description: parsed.description ?? null,
+    hourly_price: parsed.hourlyPrice.toFixed(2),
+    sport: parsed.sport,
+    slot_duration_minutes: parsed.slotDurationMinutes,
+    football_capacity: null,
+    football_surface: null,
+    padel_wall_material: parsed.padelWall ?? null,
+    padel_location: parsed.padelLocation ?? null,
+  };
+}
+
 export async function createField(
   _prev: FieldActionState,
   formData: FormData,
@@ -37,14 +80,20 @@ export async function createField(
   const parsed = fieldCreateSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
-    fieldType: formData.get("fieldType"),
-    surface: formData.get("surface"),
     hourlyPrice: formData.get("hourlyPrice"),
     venueId: formData.get("venueId"),
+    sport: formData.get("sport"),
+    slotDurationMinutes: formData.get("slotDurationMinutes"),
+    footballCapacity: formData.get("footballCapacity") || undefined,
+    footballSurface: formData.get("footballSurface") || undefined,
+    padelWall: formData.get("padelWall") || undefined,
+    padelLocation: formData.get("padelLocation") || undefined,
   });
 
   if (!parsed.success) {
-    const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
+    const first =
+      parsed.error.issues[0]?.message
+      ?? Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
     return { error: first ?? "Revisa los campos" };
   }
 
@@ -64,17 +113,15 @@ export async function createField(
     return { error: "Establecimiento no válido o no te pertenece" };
   }
 
+  const insertPayload: FieldInsert = {
+    owner_id: user.id,
+    venue_id: parsed.data.venueId,
+    ...buildFieldPayload(parsed.data),
+  };
+
   const { data: inserted, error } = await supabase
     .from("fields")
-    .insert({
-      owner_id: user.id,
-      venue_id: parsed.data.venueId,
-      name: parsed.data.name,
-      description: parsed.data.description ?? null,
-      field_type: parsed.data.fieldType,
-      surface: parsed.data.surface,
-      hourly_price: parsed.data.hourlyPrice.toFixed(2),
-    })
+    .insert(insertPayload)
     .select("id")
     .single();
 
@@ -89,6 +136,16 @@ export async function createField(
         .update({ image_url: imageUrl })
         .eq("id", inserted.id);
     }
+  }
+
+  try {
+    await replacePricingWindowsSingleBand(
+      supabase,
+      inserted.id,
+      parsed.data.hourlyPrice,
+    );
+  } catch {
+    /* sin tabla field_pricing_windows */
   }
 
   revalidatePath("/admin/canchas");
@@ -106,24 +163,26 @@ export async function updateField(
   const parsed = fieldUpdateSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
-    fieldType: formData.get("fieldType"),
-    surface: formData.get("surface"),
     hourlyPrice: formData.get("hourlyPrice"),
+    sport: formData.get("sport"),
+    slotDurationMinutes: formData.get("slotDurationMinutes"),
+    footballCapacity: formData.get("footballCapacity") || undefined,
+    footballSurface: formData.get("footballSurface") || undefined,
+    padelWall: formData.get("padelWall") || undefined,
+    padelLocation: formData.get("padelLocation") || undefined,
   });
 
   if (!parsed.success) {
-    const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
+    const first =
+      parsed.error.issues[0]?.message
+      ?? Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
     return { error: first ?? "Revisa los campos" };
   }
 
   const supabase = await createClient();
 
-  const updateData: Record<string, unknown> = {
-    name: parsed.data.name,
-    description: parsed.data.description ?? null,
-    field_type: parsed.data.fieldType,
-    surface: parsed.data.surface,
-    hourly_price: parsed.data.hourlyPrice.toFixed(2),
+  const updateData: Database["public"]["Tables"]["fields"]["Update"] = {
+    ...buildFieldPayload(parsed.data),
   };
 
   const imageFile = formData.get("image") as File | null;
@@ -140,6 +199,22 @@ export async function updateField(
     .eq("id", fieldId);
 
   if (error) return { error: error.message };
+
+  try {
+    const { count, error: cErr } = await supabase
+      .from("field_pricing_windows")
+      .select("id", { count: "exact", head: true })
+      .eq("field_id", fieldId);
+    if (!cErr && (count ?? 0) <= 1) {
+      await replacePricingWindowsSingleBand(
+        supabase,
+        fieldId,
+        parsed.data.hourlyPrice,
+      );
+    }
+  } catch {
+    /* sin migración de ventanas */
+  }
 
   revalidatePath("/admin/canchas");
   revalidatePath("/explorar");

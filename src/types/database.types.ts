@@ -1,5 +1,5 @@
 /**
- * Tipos alineados con `supabase/migrations/20260403210000_initial_schema.sql`.
+ * Tipos alineados con migraciones Supabase (p. ej. `20260412120000_sport_types_and_court_attrs.sql`).
  * Tras cambios en DB, regenerar:
  * npx supabase gen types typescript --project-id <id> > src/types/database.types.ts
  */
@@ -12,8 +12,11 @@ export type Json =
   | Json[];
 
 export type UserRole = "USER" | "ADMIN";
-export type FieldType = "F5" | "F6" | "F7" | "F8" | "F11";
-export type SurfaceType = "ROOFED" | "OPEN";
+export type SportType = "PADEL" | "FUTBOL";
+export type FootballCapacity = "F5" | "F7" | "F9" | "F11";
+export type FootballSurface = "SYNTHETIC_GRASS" | "NATURAL_GRASS";
+export type PadelWallMaterial = "GLASS" | "WALL";
+export type PadelCourtLocation = "INDOOR" | "OUTDOOR";
 export type BookingStatus = "PENDING" | "PAID" | "CANCELLED";
 export type IdDocumentType = "CC" | "CE" | "NIT";
 
@@ -110,11 +113,16 @@ export type Database = {
           venue_id: string;
           name: string;
           description: string | null;
-          field_type: FieldType;
-          surface: SurfaceType;
+          sport: SportType;
+          football_capacity: FootballCapacity | null;
+          football_surface: FootballSurface | null;
+          padel_wall_material: PadelWallMaterial | null;
+          padel_location: PadelCourtLocation | null;
+          slot_duration_minutes: number;
           hourly_price: string;
           is_active: boolean;
           image_url: string | null;
+          list_in_explore: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -124,11 +132,16 @@ export type Database = {
           venue_id: string;
           name: string;
           description?: string | null;
-          field_type: FieldType;
-          surface: SurfaceType;
+          sport?: SportType;
+          football_capacity?: FootballCapacity | null;
+          football_surface?: FootballSurface | null;
+          padel_wall_material?: PadelWallMaterial | null;
+          padel_location?: PadelCourtLocation | null;
+          slot_duration_minutes?: number;
           hourly_price: string;
           is_active?: boolean;
           image_url?: string | null;
+          list_in_explore?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -138,11 +151,16 @@ export type Database = {
           venue_id?: string;
           name?: string;
           description?: string | null;
-          field_type?: FieldType;
-          surface?: SurfaceType;
+          sport?: SportType;
+          football_capacity?: FootballCapacity | null;
+          football_surface?: FootballSurface | null;
+          padel_wall_material?: PadelWallMaterial | null;
+          padel_location?: PadelCourtLocation | null;
+          slot_duration_minutes?: number;
           hourly_price?: string;
           is_active?: boolean;
           image_url?: string | null;
+          list_in_explore?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -159,6 +177,77 @@ export type Database = {
             columns: ["venue_id"];
             isOneToOne: false;
             referencedRelation: "venues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      field_composite_members: {
+        Row: {
+          composite_field_id: string;
+          member_field_id: string;
+        };
+        Insert: {
+          composite_field_id: string;
+          member_field_id: string;
+        };
+        Update: {
+          composite_field_id?: string;
+          member_field_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "field_composite_members_composite_field_id_fkey";
+            columns: ["composite_field_id"];
+            isOneToOne: false;
+            referencedRelation: "fields";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "field_composite_members_member_field_id_fkey";
+            columns: ["member_field_id"];
+            isOneToOne: false;
+            referencedRelation: "fields";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      field_pricing_windows: {
+        Row: {
+          id: string;
+          field_id: string;
+          start_minute: number;
+          end_minute: number;
+          hourly_price: string;
+          day_of_week: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          field_id: string;
+          start_minute: number;
+          end_minute: number;
+          hourly_price: string | number;
+          day_of_week?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          field_id?: string;
+          start_minute?: number;
+          end_minute?: number;
+          hourly_price?: string | number;
+          day_of_week?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "field_pricing_windows_field_id_fkey";
+            columns: ["field_id"];
+            isOneToOne: false;
+            referencedRelation: "fields";
             referencedColumns: ["id"];
           },
         ];
@@ -263,8 +352,11 @@ export type Database = {
     };
     Enums: {
       user_role: UserRole;
-      field_type: FieldType;
-      surface_type: SurfaceType;
+      sport_type: SportType;
+      football_capacity: FootballCapacity;
+      football_surface: FootballSurface;
+      padel_wall_material: PadelWallMaterial;
+      padel_court_location: PadelCourtLocation;
       booking_status: BookingStatus;
       id_document_type: IdDocumentType;
     };

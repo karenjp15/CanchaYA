@@ -1,37 +1,64 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { getResolvedHourlyPrice } from "@/actions/field-pricing";
 import { fieldVenueName, type Field } from "@/lib/data/field-model";
-import { FIELD_TYPE_LABELS, FIELD_TYPE_PLAYERS } from "@/lib/constants";
+import { fieldSportDetailLine } from "@/lib/field-display";
 import { formatDateLong } from "@/lib/date-utils";
+import { totalPriceFromHourlyAndMinutes } from "@/lib/pricing";
+import type { SportType } from "@/types/database.types";
 
 type BookingDetailsPanelProps = {
   field: Field;
   selectedDate: string | null;
   selectedTime: string | null;
+  sport: SportType;
 };
 
-function parseTimeLabel(iso: string) {
-  const h = parseInt(iso.split("T")[1].split(":")[0], 10);
-  const end = h + 2;
-  const fmt = (n: number) => {
-    const h12 = n > 12 ? n - 12 : n === 0 ? 12 : n;
-    return `${h12} ${n >= 12 ? "pm" : "am"}`;
+function parseTimeRangeLabel(isoStart: string, durationMinutes: number) {
+  const start = new Date(isoStart);
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+  const opts: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "America/Bogota",
   };
-  return `${fmt(h)} – ${fmt(end)}`;
+  return `${start.toLocaleTimeString("es-CO", opts)} – ${end.toLocaleTimeString("es-CO", opts)}`;
 }
 
 export function BookingDetailsPanel({
   field,
   selectedDate,
   selectedTime,
+  sport,
 }: BookingDetailsPanelProps) {
   const venue = fieldVenueName(field);
   const ready = selectedDate && selectedTime;
-  const cost = Number(field.hourly_price) * 2;
+  const durationMin = field.slot_duration_minutes;
+  const [hourly, setHourly] = useState(Number(field.hourly_price));
+
+  useEffect(() => {
+    if (!selectedTime) {
+      setHourly(Number(field.hourly_price));
+      return;
+    }
+    let cancelled = false;
+    void getResolvedHourlyPrice(field.id, selectedTime).then((h) => {
+      if (!cancelled) {
+        setHourly(h > 0 ? h : Number(field.hourly_price));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [field.id, field.hourly_price, selectedTime]);
+
+  const cost = totalPriceFromHourlyAndMinutes(hourly, durationMin);
 
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -49,7 +76,9 @@ export function BookingDetailsPanel({
         <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <dt className="shrink-0 text-muted-foreground">Hora</dt>
           <dd className="min-w-0 font-medium sm:text-right">
-            {selectedTime ? parseTimeLabel(selectedTime) : "—"}
+            {selectedTime
+              ? parseTimeRangeLabel(selectedTime, durationMin)
+              : "—"}
           </dd>
         </div>
         {venue ? (
@@ -67,14 +96,13 @@ export function BookingDetailsPanel({
           </dd>
         </div>
         <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-          <dt className="shrink-0 text-muted-foreground">Jugadores</dt>
+          <dt className="shrink-0 text-muted-foreground">Modalidad</dt>
           <dd className="min-w-0 font-medium sm:text-right">
-            {FIELD_TYPE_LABELS[field.field_type]} ·{" "}
-            {FIELD_TYPE_PLAYERS[field.field_type]}
+            {fieldSportDetailLine(field)}
           </dd>
         </div>
         <div className="flex flex-col gap-0.5 border-t border-border pt-2 sm:flex-row sm:items-center sm:justify-between">
-          <dt className="font-semibold">Costo</dt>
+          <dt className="font-semibold">Precio final (real)</dt>
           <dd className="font-bold text-warning sm:text-right">
             {ready
               ? new Intl.NumberFormat("es-CO", {
@@ -95,7 +123,7 @@ export function BookingDetailsPanel({
         ) : null}
         {ready ? (
           <Link
-            href={`/checkout?field=${field.id}&date=${selectedDate}&time=${encodeURIComponent(selectedTime!)}`}
+            href={`/checkout?field=${field.id}&date=${selectedDate}&time=${encodeURIComponent(selectedTime!)}&sport=${sport}`}
             className={cn(buttonVariants(), "w-full justify-center")}
           >
             Reservar

@@ -8,6 +8,13 @@ import {
   fieldVenueName,
   type Field,
 } from "@/lib/data/field-model";
+import type { FieldWithAvailability } from "@/lib/data/field-availability";
+import {
+  formatPadelPricingHint,
+  padelSlotTotalRange,
+} from "@/lib/field-pricing";
+import { totalPriceFromHourlyAndMinutes } from "@/lib/pricing";
+import type { SportType } from "@/types/database.types";
 import Link from "next/link";
 import L from "leaflet";
 
@@ -34,11 +41,18 @@ function formatCOP(amount: number) {
   }).format(amount);
 }
 
-export function FieldsMap({ fields }: { fields: Field[] }) {
+type MapField = Field | FieldWithAvailability;
+
+export function FieldsMap({
+  fields,
+  sport,
+}: {
+  fields: MapField[];
+  sport: SportType;
+}) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Leaflet solo en cliente; evita mismatch de hidratación
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
@@ -51,11 +65,10 @@ export function FieldsMap({ fields }: { fields: Field[] }) {
     );
   }
 
-  return <MapInner fields={fields} />;
+  return <MapInner fields={fields} sport={sport} />;
 }
 
-function MapInner({ fields }: { fields: Field[] }) {
-  /* Carga dinámica tras montar en cliente (evita SSR de react-leaflet) */
+function MapInner({ fields, sport }: { fields: MapField[]; sport: SportType }) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const rl = require("react-leaflet") as typeof import("react-leaflet");
   const { MapContainer, TileLayer, Marker, Popup } = rl;
@@ -88,6 +101,26 @@ function MapInner({ fields }: { fields: Field[] }) {
         />
         {validFields.map((field) => {
           const venue = fieldVenueName(field);
+          const padelRange =
+            field.sport === "PADEL" && (field.pricing_windows?.length ?? 0) > 0
+              ? padelSlotTotalRange(
+                  field.pricing_windows ?? [],
+                  field.slot_duration_minutes,
+                )
+              : null;
+          const padelHint =
+            field.sport === "PADEL" && (field.pricing_windows?.length ?? 0) > 0
+              ? formatPadelPricingHint(
+                  field.pricing_windows ?? [],
+                  formatCOP,
+                )
+              : null;
+          const total = padelRange
+            ? padelRange.valleyTotal
+            : totalPriceFromHourlyAndMinutes(
+                Number(field.hourly_price),
+                field.slot_duration_minutes,
+              );
           return (
           <Marker
             key={field.id}
@@ -109,10 +142,23 @@ function MapInner({ fields }: { fields: Field[] }) {
                   {fieldAddress(field)}
                 </p>
                 <p className="font-medium" style={{ color: "#f97316" }}>
-                  {formatCOP(Number(field.hourly_price))}/h
+                  {padelRange && padelHint ? (
+                    <>
+                      {formatCOP(padelRange.valleyTotal)} –{" "}
+                      {formatCOP(padelRange.peakTotal)} ·{" "}
+                      {field.slot_duration_minutes} min
+                    </>
+                  ) : (
+                    <>
+                      {formatCOP(total)} · {field.slot_duration_minutes} min
+                    </>
+                  )}
                 </p>
+                {padelHint ? (
+                  <p className="text-[11px] text-muted-foreground">{padelHint}</p>
+                ) : null}
                 <Link
-                  href={`/canchas/${field.id}`}
+                  href={`/canchas/${field.id}?sport=${sport}`}
                   className="inline-block text-xs font-medium text-primary underline underline-offset-2"
                 >
                   Ver detalle

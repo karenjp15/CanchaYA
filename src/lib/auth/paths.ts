@@ -1,5 +1,5 @@
 /** Ruta por defecto tras login para usuarios normales. */
-export const DEFAULT_USER_PATH = "/explorar";
+export const DEFAULT_USER_PATH = "/explorar?sport=FUTBOL";
 
 /**
  * Evita open redirects: solo rutas internas relativas.

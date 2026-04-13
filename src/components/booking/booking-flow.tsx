@@ -1,36 +1,52 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
 import { MiniCalendar } from "@/components/booking/mini-calendar";
 import { TimeSlotPicker } from "@/components/booking/time-slot-picker";
 import { BookingDetailsPanel } from "@/components/booking/booking-details-panel";
 import { generateTimeSlots, formatDateLong } from "@/lib/date-utils";
-import { getBookedSlots } from "@/actions/slots";
+import { getBookedIntervalsForField } from "@/actions/slots";
 import {
   fieldAddress,
   fieldVenueName,
   type Field,
 } from "@/lib/data/field-model";
-import { FIELD_TYPE_LABELS } from "@/lib/constants";
+import { fieldSportDetailLine } from "@/lib/field-display";
+import { SPORT_LABELS } from "@/lib/constants";
+import type { SportType } from "@/types/database.types";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Car, Wine, Loader2 } from "lucide-react";
 
-export function BookingFlow({ field }: { field: Field }) {
+export function BookingFlow({
+  field,
+  sport,
+}: {
+  field: Field;
+  sport?: SportType;
+}) {
+  const sportParam = sport ?? field.sport;
   const venue = fieldVenueName(field);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [bookedHours, setBookedHours] = useState<number[]>([]);
+  const [booked, setBooked] = useState<{ start: string; end: string }[]>([]);
   const [loading, startTransition] = useTransition();
 
   useEffect(() => {
     if (!selectedDate) return;
     startTransition(async () => {
-      const hours = await getBookedSlots(field.id, selectedDate);
-      setBookedHours(hours);
+      const intervals = await getBookedIntervalsForField(field.id, selectedDate);
+      setBooked(intervals);
     });
   }, [selectedDate, field.id]);
 
-  const slots = selectedDate ? generateTimeSlots(selectedDate, bookedHours) : [];
+  const slots = selectedDate
+    ? generateTimeSlots(
+        selectedDate,
+        booked,
+        field.slot_duration_minutes,
+      )
+    : [];
 
   function handleDateSelect(dateStr: string) {
     setSelectedDate(dateStr);
@@ -39,6 +55,32 @@ export function BookingFlow({ field }: { field: Field }) {
 
   return (
     <div className="space-y-6">
+      <nav className="text-sm text-muted-foreground">
+        <Link
+          href={`/explorar?sport=${sportParam}`}
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          ← Volver a explorar ({SPORT_LABELS[sportParam]})
+        </Link>
+      </nav>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Link
+          href={`/explorar?sport=${sportParam}`}
+          className="rounded-full border border-border px-2 py-0.5 font-medium text-foreground hover:bg-muted/60"
+        >
+          1 · Deporte
+        </Link>
+        <span aria-hidden>→</span>
+        <span className="rounded-full bg-primary/15 px-2 py-0.5 font-medium text-foreground">
+          2 · Horario
+        </span>
+        <span aria-hidden>→</span>
+        <span className="rounded-full border border-border px-2 py-0.5">
+          3 · Pago
+        </span>
+      </div>
+
       {field.image_url && (
         <div className="relative h-44 w-full overflow-hidden rounded-xl sm:h-52 md:h-56">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -82,7 +124,7 @@ export function BookingFlow({ field }: { field: Field }) {
             </>
           )}
           <Badge variant="outline" className="text-[10px]">
-            {FIELD_TYPE_LABELS[field.field_type]}
+            {fieldSportDetailLine(field)}
           </Badge>
           {field.venues.parking_available && (
             <Badge variant="outline" className="text-[10px] gap-0.5">
@@ -128,6 +170,7 @@ export function BookingFlow({ field }: { field: Field }) {
             field={field}
             selectedDate={selectedDate}
             selectedTime={selectedTime}
+            sport={sportParam}
           />
         </div>
       </div>

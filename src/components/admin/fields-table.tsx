@@ -5,7 +5,11 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FieldFormDialog } from "@/components/admin/field-form-dialog";
-import { FIELD_TYPE_LABELS } from "@/lib/constants";
+import {
+  FOOTBALL_SURFACE_LABELS,
+  SPORT_LABELS,
+} from "@/lib/constants";
+import { fieldSportDetailLine } from "@/lib/field-display";
 import { fieldAddress, type Field } from "@/lib/data/field-model";
 import type { Venue } from "@/lib/data/venues";
 import { groupFieldsByVenue } from "@/lib/data/field-grouping";
@@ -56,7 +60,7 @@ function FieldRow({
             />
           ) : (
             <span className="flex size-full items-center justify-center text-sm text-muted-foreground">
-              ⚽
+              {f.sport === "PADEL" ? "🎾" : "⚽"}
             </span>
           )}
         </div>
@@ -70,14 +74,22 @@ function FieldRow({
       </td>
       <td className="px-4 py-3">
         <Badge variant="outline" className="text-[10px]">
-          {FIELD_TYPE_LABELS[f.field_type]}
+          {SPORT_LABELS[f.sport]}
         </Badge>
       </td>
-      <td className="px-4 py-3 text-muted-foreground">
-        {f.surface === "ROOFED" ? "Techo" : "Abierta"}
+      <td className="px-4 py-3 text-muted-foreground max-w-[220px]">
+        <span className="text-foreground">{fieldSportDetailLine(f)}</span>
+        {f.sport === "FUTBOL" && f.football_surface ? (
+          <span className="mt-0.5 block text-[11px]">
+            {FOOTBALL_SURFACE_LABELS[f.football_surface]}
+          </span>
+        ) : null}
       </td>
       <td className="px-4 py-3 text-right font-medium">
-        {formatCOP(Number(f.hourly_price))}
+        <span className="block">{formatCOP(Number(f.hourly_price))}</span>
+        <span className="text-[10px] font-normal text-muted-foreground">
+          {f.slot_duration_minutes} min
+        </span>
       </td>
       <td className="px-4 py-3 text-center">
         {f.venues.parking_available ? (
@@ -140,9 +152,9 @@ export function FieldsTable({
             <th className="px-4 py-2.5 font-medium">Cancha</th>
             <th className="px-4 py-2.5 font-medium">Establecimiento</th>
             <th className="px-4 py-2.5 font-medium">Dirección</th>
-            <th className="px-4 py-2.5 font-medium">Tipo</th>
-            <th className="px-4 py-2.5 font-medium">Superficie</th>
-            <th className="px-4 py-2.5 font-medium text-right">Precio/h</th>
+            <th className="px-4 py-2.5 font-medium">Deporte</th>
+            <th className="px-4 py-2.5 font-medium">Detalle</th>
+            <th className="px-4 py-2.5 font-medium text-right">Precio / slot</th>
             <th className="px-4 py-2.5 font-medium text-center">Parking</th>
             <th className="px-4 py-2.5 font-medium text-center">Licor</th>
             <th className="px-4 py-2.5 font-medium text-center">Estado</th>

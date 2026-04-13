@@ -28,7 +28,7 @@ function BrowserMockup() {
           <span className="size-2.5 rounded-full bg-primary/80" />
         </div>
         <div className="mx-auto flex-1 max-w-[min(100%,14rem)] rounded-md bg-background/80 px-2 py-1 text-center text-[10px] text-muted-foreground">
-          canchaya.app/explorar
+          canchaya.app/explorar?sport=FUTBOL
         </div>
       </div>
       <div className="flex gap-2 p-2 sm:p-3">
@@ -75,7 +75,7 @@ export default function HomePage() {
           </Link>
           <nav className="flex items-center gap-3 text-sm sm:gap-4">
             <Link
-              href="/explorar"
+              href="/explorar?sport=FUTBOL"
               className="font-medium text-foreground transition-colors hover:text-primary"
             >
               Ver app
@@ -122,7 +122,7 @@ export default function HomePage() {
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/explorar"
+                href="/explorar?sport=FUTBOL"
                 className={cn(buttonVariants({ size: "lg" }), "gap-2")}
               >
                 Explorar canchas
@@ -334,7 +334,7 @@ export default function HomePage() {
             regístrate en segundos.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/explorar" className={cn(buttonVariants({ size: "lg" }))}>
+            <Link href="/explorar?sport=FUTBOL" className={cn(buttonVariants({ size: "lg" }))}>
               Ir a la app
             </Link>
             <Link

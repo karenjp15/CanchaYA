@@ -1,54 +1,34 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getBookingOverlapFieldIds } from "@/lib/data/composite-fields";
+import { nextBogotaDateString } from "@/lib/date-utils";
 
 /**
- * Returns the start hours (0-23) that are already booked (PENDING or PAID)
- * for a given field on a given date (YYYY-MM-DD) in America/Bogota.
+ * Intervalos [start, end) de reservas activas que solapan el día dado (America/Bogota).
+ * Incluye bloqueos por modo combinado (F9) y canchas miembro.
  */
-export async function getBookedSlots(
+export async function getBookedIntervalsForField(
   fieldId: string,
   date: string,
-): Promise<number[]> {
+): Promise<{ start: string; end: string }[]> {
   const supabase = await createClient();
 
   const dayStart = `${date}T00:00:00-05:00`;
-  const dayEnd = `${date}T23:59:59-05:00`;
+  const nextDayStr = nextBogotaDateString(date);
+  const rangeEnd = `${nextDayStr}T00:00:00-05:00`;
+
+  const overlapIds = await getBookingOverlapFieldIds(supabase, fieldId);
 
   const { data, error } = await supabase
     .from("bookings")
     .select("start_time, end_time")
-    .eq("field_id", fieldId)
+    .in("field_id", overlapIds)
     .in("status", ["PENDING", "PAID"])
-    .gte("start_time", dayStart)
-    .lte("start_time", dayEnd);
+    .gt("end_time", dayStart)
+    .lt("start_time", rangeEnd);
 
   if (error || !data) return [];
 
-  const bookedHours: number[] = [];
-  for (const booking of data) {
-    const start = new Date(booking.start_time);
-    const end = new Date(booking.end_time);
-    const startHour = parseInt(
-      start.toLocaleString("en-US", {
-        hour: "numeric",
-        hour12: false,
-        timeZone: "America/Bogota",
-      }),
-      10,
-    );
-    const endHour = parseInt(
-      end.toLocaleString("en-US", {
-        hour: "numeric",
-        hour12: false,
-        timeZone: "America/Bogota",
-      }),
-      10,
-    );
-    for (let h = startHour; h < endHour; h++) {
-      if (!bookedHours.includes(h)) bookedHours.push(h);
-    }
-  }
-
-  return bookedHours;
+  return data.map((b) => ({ start: b.start_time, end: b.end_time }));
 }

@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { checkoutSchema } from "@/lib/schemas/checkout";
+import { fetchPricingWindowsForFields } from "@/lib/data/field-pricing-data";
+import { resolveHourlyPriceFromWindows } from "@/lib/field-pricing";
 import { redirect } from "next/navigation";
 
 export type CheckoutActionState = {
@@ -41,7 +43,7 @@ export async function processCheckout(
 
   const { data: field, error: fieldErr } = await supabase
     .from("fields")
-    .select("hourly_price")
+    .select("hourly_price, slot_duration_minutes")
     .eq("id", parsed.data.fieldId)
     .maybeSingle();
 
@@ -51,8 +53,22 @@ export async function processCheckout(
 
   const start = new Date(parsed.data.startTime);
   const end = new Date(parsed.data.endTime);
-  const hours = (end.getTime() - start.getTime()) / 3_600_000;
-  const totalPrice = Number(field.hourly_price) * hours;
+  const durationMin = Math.round((end.getTime() - start.getTime()) / 60_000);
+  if (durationMin !== field.slot_duration_minutes) {
+    return {
+      error: "La duración de la reserva no coincide con la cancha. Vuelve a elegir horario.",
+    };
+  }
+
+  const winMap = await fetchPricingWindowsForFields(supabase, [parsed.data.fieldId]);
+  const windows = winMap.get(parsed.data.fieldId) ?? [];
+  const hourly = resolveHourlyPriceFromWindows(
+    windows,
+    parsed.data.startTime,
+    Number(field.hourly_price),
+  );
+  const hours = durationMin / 60;
+  const totalPrice = hourly * hours;
 
   const { error: bookingErr } = await supabase.from("bookings").insert({
     user_id: user.id,
@@ -74,6 +90,12 @@ export async function processCheckout(
   if (bookingErr) {
     if (bookingErr.message.includes("bookings_field_no_overlap")) {
       return { error: "Este horario ya fue reservado por otro jugador" };
+    }
+    if (bookingErr.message.includes("bookings_composite_overlap")) {
+      return {
+        error:
+          "Este horario choca con una reserva en modo combinado o en una de las canchas vinculadas. Elige otro horario.",
+      };
     }
     return { error: bookingErr.message };
   }

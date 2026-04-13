@@ -1,12 +1,12 @@
 import type { Field } from "@/lib/data/field-model";
 
 /** Agrupa canchas por establecimiento. Orden: nombre del local, luego cancha. */
-export function groupFieldsByVenue(fields: Field[]): {
+export function groupFieldsByVenue<T extends Field>(fields: T[]): {
   venueId: string;
   venue: Field["venues"];
-  fields: Field[];
+  fields: T[];
 }[] {
-  const map = new Map<string, Field[]>();
+  const map = new Map<string, T[]>();
   for (const f of fields) {
     const list = map.get(f.venue_id) ?? [];
     list.push(f);

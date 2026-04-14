@@ -107,12 +107,25 @@ export async function getActiveFields(filters?: {
   city?: string | null;
 }) {
   const supabase = await createClient();
+  const sport = filters?.sport ?? "FUTBOL";
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("fields")
     .select("*")
     .eq("is_active", true)
+    .eq("sport", sport)
+    .or("list_in_explore.is.null,list_in_explore.eq.true")
     .order("name");
+
+  if (
+    sport === "FUTBOL" &&
+    filters?.capacity &&
+    ["F5", "F7", "F9", "F11"].includes(filters.capacity)
+  ) {
+    q = q.eq("football_capacity", filters.capacity);
+  }
+
+  const { data, error } = await q;
 
   if (error) throw new Error(error.message);
 
@@ -123,21 +136,6 @@ export async function getActiveFields(filters?: {
   );
 
   let rows = attachVenues(fieldRows, map);
-
-  const sport = filters?.sport ?? "FUTBOL";
-  rows = rows.filter((f) => f.sport === sport);
-
-  if (
-    filters?.capacity &&
-    ["F5", "F7", "F9", "F11"].includes(filters.capacity)
-  ) {
-    rows = rows.filter(
-      (f) =>
-        f.sport === "FUTBOL" && f.football_capacity === filters.capacity,
-    );
-  }
-
-  rows = rows.filter((f) => f.list_in_explore ?? true);
 
   if (filters?.parking === "1") {
     rows = rows.filter((f) => f.venues.parking_available);

@@ -13,8 +13,10 @@ export const SPORT_LABELS: Record<SportType, string> = {
   FUTBOL: "Fútbol",
 };
 
-/** Paso de la rejilla de horarios (minutos). */
-export const SLOT_GRID_STEP_MINUTES = 30;
+/** Hora local (America/Bogota): primera reserva del día. */
+export const BOOKING_SLOT_DAY_START_HOUR = 6;
+/** Hora local: cierre (último slot termina a esta hora, ej. 23 = hasta 11:00 p.m.). */
+export const BOOKING_SLOT_DAY_END_HOUR = 23;
 
 export const FOOTBALL_CAPACITY_LABELS: Record<FootballCapacity, string> = {
   F5: "Fútbol 5",

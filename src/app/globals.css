@@ -140,3 +140,12 @@
     @apply font-sans;
   }
 }
+
+/* Listas nativas de <select> en /explorar (donde el SO lo permite) */
+@layer components {
+  .explorar-filter-select option,
+  .explorar-filter-select optgroup {
+    background-color: var(--card);
+    color: var(--card-foreground);
+  }
+}

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Venue } from "@/lib/data/venues";
 import { fetchPricingWindowsForFields } from "@/lib/data/field-pricing-data";
+import { venueAddressMatchesCitySlug } from "@/lib/colombia-cities";
 import type { FootballCapacity, SportType } from "@/types/database.types";
 import type { Field, FieldRow } from "./field-model";
 
@@ -102,6 +103,8 @@ export async function getActiveFields(filters?: {
   capacity?: FootballCapacity;
   parking?: string;
   liquor?: string;
+  /** Slug de ciudad (COLOMBIA_EXPLORAR_CITIES); vacío = todas. */
+  city?: string | null;
 }) {
   const supabase = await createClient();
 
@@ -147,6 +150,12 @@ export async function getActiveFields(filters?: {
   }
   if (filters?.liquor === "0") {
     rows = rows.filter((f) => !f.venues.sells_liquor);
+  }
+
+  if (filters?.city?.trim()) {
+    rows = rows.filter((f) =>
+      venueAddressMatchesCitySlug(f.venues.address, filters.city),
+    );
   }
 
   return attachPricingWindows(supabase, rows);

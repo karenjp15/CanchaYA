@@ -8,6 +8,7 @@ import { attachAvailabilityToday } from "@/lib/data/field-availability";
 import { cn } from "@/lib/utils";
 import type { FootballCapacity, SportType } from "@/types/database.types";
 import { redirect } from "next/navigation";
+import { COLOMBIA_EXPLORAR_CITIES } from "@/lib/colombia-cities";
 import { SPORT_LABELS } from "@/lib/constants";
 
 export const metadata = {
@@ -21,6 +22,7 @@ type Props = {
     type?: string;
     parking?: string;
     liquor?: string;
+    city?: string;
   }>;
 };
 
@@ -47,12 +49,17 @@ export default async function ExplorarPage({ searchParams }: Props) {
         : undefined,
     parking: q.parking,
     liquor: q.liquor,
+    city: q.city?.trim() || null,
   });
   const fieldsWithAvail = await attachAvailabilityToday(fields);
   const byVenue = groupFieldsByVenue(fieldsWithAvail);
 
   const venueCount = byVenue.length;
   const fieldCount = fieldsWithAvail.length;
+  const citySlug = q.city?.trim() ?? "";
+  const cityLabel = citySlug
+    ? COLOMBIA_EXPLORAR_CITIES.find((c) => c.slug === citySlug)?.label
+    : null;
 
   return (
     <div className="flex flex-1 flex-col gap-4 py-4 sm:gap-5 sm:py-6">
@@ -100,6 +107,15 @@ export default async function ExplorarPage({ searchParams }: Props) {
                       </span>
                     </>
                   ) : null}
+                  {cityLabel ? (
+                    <>
+                      {" "}
+                      · ciudad{" "}
+                      <span className="font-medium text-foreground">
+                        {cityLabel}
+                      </span>
+                    </>
+                  ) : null}
                 </>
               )}
             </p>
@@ -134,8 +150,8 @@ export default async function ExplorarPage({ searchParams }: Props) {
             "xl:sticky xl:top-20 xl:self-start",
           )}
         >
-          <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground xl:text-left">
-            Mapa
+          <p className="mb-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground xl:text-left">
+            Centros deportivos cercanos
           </p>
           <div
             className={cn(

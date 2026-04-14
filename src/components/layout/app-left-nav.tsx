@@ -18,7 +18,8 @@ export function AppLeftNav() {
     <aside
       className={cn(
         "fixed bottom-0 left-0 right-0 z-40 flex flex-col border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md",
-        "md:static md:z-0 md:h-svh md:w-56 md:shrink-0 md:border-r md:border-t-0 md:bg-card md:backdrop-blur-none md:shadow-[2px_0_24px_-12px_rgba(0,0,0,0.08)] dark:md:shadow-[2px_0_24px_-12px_rgba(0,0,0,0.35)]",
+        /* Escritorio: ocupa el alto del viewport y permanece visible al hacer scroll en el contenido. */
+        "md:sticky md:top-0 md:z-20 md:h-svh md:max-h-svh md:w-56 md:shrink-0 md:self-start md:border-r md:border-t-0 md:bg-card md:backdrop-blur-none md:shadow-[2px_0_24px_-12px_rgba(0,0,0,0.08)] dark:md:shadow-[2px_0_24px_-12px_rgba(0,0,0,0.35)]",
       )}
       aria-label="Navegación de la aplicación"
     >

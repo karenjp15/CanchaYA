@@ -46,7 +46,7 @@ begin
       aid, vid, 'Pista Central Cristal', 'PADEL'::public.sport_type,
       'GLASS'::public.padel_wall_material, 'INDOOR'::public.padel_court_location,
       90, 80000,
-      'https://images.unsplash.com/photo-1622163642999-299bc586bbb5?w=1200&q=80',
+      '/fields/field-6.jpg',
       true, true
     )
     returning id into fid;
@@ -84,7 +84,7 @@ begin
       aid, vid, 'Pista Acristalada Norte', 'PADEL'::public.sport_type,
       'GLASS'::public.padel_wall_material, 'OUTDOOR'::public.padel_court_location,
       90, 110000,
-      'https://images.unsplash.com/photo-1595435934249-233743b99976?w=1200&q=80',
+      '/fields/field-3.jpg',
       true, true
     )
     returning id into fid;
@@ -122,7 +122,7 @@ begin
       aid, vid, 'Pista Doble Altura', 'PADEL'::public.sport_type,
       'GLASS'::public.padel_wall_material, 'INDOOR'::public.padel_court_location,
       90, 80000,
-      'https://images.unsplash.com/photo-1576610618956-f0b362cd5618?w=1200&q=80',
+      '/fields/field-2.jpg',
       true, true
     )
     returning id into fid;
@@ -160,7 +160,7 @@ begin
       aid, vid, 'Pista Premium Indoor', 'PADEL'::public.sport_type,
       'WALL'::public.padel_wall_material, 'INDOOR'::public.padel_court_location,
       90, 110000,
-      'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=1200&q=80',
+      '/fields/field-1.jpg',
       true, true
     )
     returning id into fid;
@@ -170,6 +170,31 @@ begin
   insert into public.field_pricing_windows (field_id, start_minute, end_minute, hourly_price, day_of_week) values
     (fid, 360, 960, 110000, null),
     (fid, 960, 1320, 130000, null);
+
+  -- Sincronizar fotos locales (evita 404/403 de hotlinks Unsplash si el club ya existía).
+  update public.fields f
+  set image_url = '/fields/field-6.jpg'
+  from public.venues v
+  where f.venue_id = v.id and v.owner_id = aid
+    and v.name = 'ORO NORTE PÁDEL CLUB' and f.name = 'Pista Central Cristal';
+
+  update public.fields f
+  set image_url = '/fields/field-3.jpg'
+  from public.venues v
+  where f.venue_id = v.id and v.owner_id = aid
+    and v.name = 'ARENA 93 ROOFTOP PADEL' and f.name = 'Pista Acristalada Norte';
+
+  update public.fields f
+  set image_url = '/fields/field-2.jpg'
+  from public.venues v
+  where f.venue_id = v.id and v.owner_id = aid
+    and v.name = 'CLUB ZONA G CRISTAL' and f.name = 'Pista Doble Altura';
+
+  update public.fields f
+  set image_url = '/fields/field-1.jpg'
+  from public.venues v
+  where f.venue_id = v.id and v.owner_id = aid
+    and v.name = 'VÉRTICE SUBA PADEL HOUSE' and f.name = 'Pista Premium Indoor';
 
   raise notice 'Datos demo pádel (4 clubes) aplicados o actualizados.';
 end;

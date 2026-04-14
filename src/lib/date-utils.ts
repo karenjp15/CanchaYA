@@ -1,4 +1,8 @@
-import { APP_TIMEZONE, SLOT_GRID_STEP_MINUTES } from "@/lib/constants";
+import {
+  APP_TIMEZONE,
+  BOOKING_SLOT_DAY_END_HOUR,
+  BOOKING_SLOT_DAY_START_HOUR,
+} from "@/lib/constants";
 
 /** Format a Date to YYYY-MM-DD in Bogotá time */
 export function toBogotaDateString(d: Date): string {
@@ -62,19 +66,23 @@ function formatSlotRangeLabel(start: Date, end: Date): string {
 }
 
 /**
- * Slots candidatos cada `gridStepMinutes`, con duración `slotDurationMinutes`,
- * ventana 06:00–22:00 (Bogotá). `booked` son intervalos solapantes ya reservados.
+ * Slots de reserva sin solaparse: empiezan cada `slotDurationMinutes`,
+ * ventana local Bogotá [BOOKING_SLOT_DAY_START_HOUR, BOOKING_SLOT_DAY_END_HOUR)
+ * (p. ej. 6:00–23:00 → el último slot de 60 min empieza a las 22:00).
+ * `booked`: intervalos que bloquean.
  */
 export function generateTimeSlots(
   date: string,
   booked: { start: string; end: string }[],
   slotDurationMinutes: number,
-  gridStepMinutes: number = SLOT_GRID_STEP_MINUTES,
 ) {
   const slots: { time: string; label: string; available: boolean }[] = [];
 
-  const open = new Date(`${date}T06:00:00${BOGOTA_OFFSET}`);
-  const closing = new Date(`${date}T22:00:00${BOGOTA_OFFSET}`);
+  if (slotDurationMinutes <= 0) return slots;
+
+  const dayOpenMin = BOOKING_SLOT_DAY_START_HOUR * 60;
+  const dayCloseMin = BOOKING_SLOT_DAY_END_HOUR * 60;
+  const dayMidnight = new Date(`${date}T00:00:00${BOGOTA_OFFSET}`);
 
   const bookedRanges = booked.map((b) => ({
     start: new Date(b.start),
@@ -84,28 +92,16 @@ export function generateTimeSlots(
   const now = new Date();
   const todayStr = toBogotaDateString(now);
   const isToday = date === todayStr;
-  const nowBogota = new Date(
-    now.toLocaleString("en-US", { timeZone: APP_TIMEZONE }),
-  );
-
-  const durationMs = slotDurationMinutes * 60_000;
-  const stepMs = gridStepMinutes * 60_000;
 
   for (
-    let cur = open.getTime();
-    cur + durationMs <= closing.getTime();
-    cur += stepMs
+    let m = dayOpenMin;
+    m + slotDurationMinutes <= dayCloseMin;
+    m += slotDurationMinutes
   ) {
-    const start = new Date(cur);
-    const end = new Date(cur + durationMs);
+    const start = new Date(dayMidnight.getTime() + m * 60_000);
+    const end = new Date(start.getTime() + slotDurationMinutes * 60_000);
 
-    const startHour = start.getHours();
-    const startMin = start.getMinutes();
-    const isPast =
-      isToday &&
-      (startHour < nowBogota.getHours() ||
-        (startHour === nowBogota.getHours() &&
-          startMin <= nowBogota.getMinutes()));
+    const isPast = isToday && start.getTime() < now.getTime();
 
     const isBooked = bookedRanges.some((br) =>
       rangesOverlap(start, end, br.start, br.end),

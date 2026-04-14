@@ -16,7 +16,7 @@ export default async function AppLayout({
       : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-muted/25 md:min-h-svh md:flex-row md:bg-background">
+    <div className="flex min-h-0 flex-1 flex-col bg-muted/25 md:min-h-svh md:flex-row md:items-start md:bg-background">
       <AppLeftNav />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-14 md:border-l md:border-border/80 md:bg-background md:pb-0">
         <AppHeader user={user} />

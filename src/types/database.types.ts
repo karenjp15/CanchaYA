@@ -362,6 +362,16 @@ export type Database = {
         };
         Returns: Record<string, unknown>;
       };
+      get_average_occupancy_by_field: {
+        Args: {
+          p_field_id: string;
+          p_weekdays: number[];
+          p_start_minute: number;
+          p_end_minute: number;
+          p_lookback_days?: number;
+        };
+        Returns: number;
+      };
     };
     Enums: {
       user_role: UserRole;

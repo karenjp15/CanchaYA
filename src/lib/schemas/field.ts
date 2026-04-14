@@ -1,5 +1,38 @@
 import { z } from "zod";
 
+/** Franjas especiales enviadas como JSON desde el formulario de cancha. */
+export const specialBandSchema = z
+  .object({
+    id: z.string(),
+    preset: z.enum(["all", "weekdays", "weekend", "custom"]),
+    customDays: z.array(z.number().int().min(0).max(6)),
+    start: z.string().regex(/^\d{2}:\d{2}$/),
+    end: z.string().regex(/^\d{2}:\d{2}$/),
+    price: z.coerce.number().min(0),
+  })
+  .superRefine((data, ctx) => {
+    const [sh, sm] = data.start.split(":").map(Number);
+    const [eh, em] = data.end.split(":").map(Number);
+    const sMin = sh * 60 + sm;
+    const eMin = eh * 60 + em;
+    if (eMin <= sMin) {
+      ctx.addIssue({
+        code: "custom",
+        message: "La hora fin debe ser mayor al inicio",
+        path: ["end"],
+      });
+    }
+    if (data.preset === "custom" && data.customDays.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Elige al menos un día",
+        path: ["customDays"],
+      });
+    }
+  });
+
+export const pricingWindowsPayloadSchema = z.array(specialBandSchema);
+
 const core = {
   name: z.string().min(2, "Nombre requerido"),
   description: z.string().optional(),

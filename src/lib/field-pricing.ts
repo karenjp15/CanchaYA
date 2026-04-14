@@ -59,18 +59,14 @@ export function resolveHourlyPriceFromWindows(
     const specA = a.day_of_week != null ? 0 : 1;
     const specB = b.day_of_week != null ? 0 : 1;
     if (specA !== specB) return specA - specB;
+    const widthA = a.end_minute - a.start_minute;
+    const widthB = b.end_minute - b.start_minute;
+    if (widthA !== widthB) return widthA - widthB;
     return a.start_minute - b.start_minute;
   });
 
   for (const w of sorted) {
     if (w.day_of_week != null && w.day_of_week !== dow) continue;
-    if (mins >= w.start_minute && mins < w.end_minute) {
-      return Number(w.hourly_price);
-    }
-  }
-
-  for (const w of sorted) {
-    if (w.day_of_week != null) continue;
     if (mins >= w.start_minute && mins < w.end_minute) {
       return Number(w.hourly_price);
     }

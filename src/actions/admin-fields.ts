@@ -1,12 +1,32 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { replacePricingWindowsSingleBand } from "@/lib/data/field-pricing-data";
-import { fieldCreateSchema, fieldUpdateSchema } from "@/lib/schemas/field";
+import {
+  replacePricingWindowsForField,
+  replacePricingWindowsSingleBand,
+} from "@/lib/data/field-pricing-data";
+import {
+  fieldCreateSchema,
+  fieldUpdateSchema,
+  pricingWindowsPayloadSchema,
+} from "@/lib/schemas/field";
+import type { SpecialBandForm } from "@/lib/pricing-windows-form";
 import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
 
 type FieldInsert = Database["public"]["Tables"]["fields"]["Insert"];
+
+function parseSpecialsFromForm(formData: FormData): SpecialBandForm[] {
+  const raw = formData.get("pricingWindowsJson");
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    const j = JSON.parse(raw) as unknown;
+    const p = pricingWindowsPayloadSchema.safeParse(j);
+    return p.success ? p.data : [];
+  } catch {
+    return [];
+  }
+}
 
 export type FieldActionState = {
   error?: string;
@@ -139,13 +159,23 @@ export async function createField(
   }
 
   try {
-    await replacePricingWindowsSingleBand(
+    const specials = parseSpecialsFromForm(formData);
+    await replacePricingWindowsForField(
       supabase,
       inserted.id,
       parsed.data.hourlyPrice,
+      specials,
     );
   } catch {
-    /* sin tabla field_pricing_windows */
+    try {
+      await replacePricingWindowsSingleBand(
+        supabase,
+        inserted.id,
+        parsed.data.hourlyPrice,
+      );
+    } catch {
+      /* sin tabla field_pricing_windows */
+    }
   }
 
   revalidatePath("/admin/locales");
@@ -202,19 +232,23 @@ export async function updateField(
   if (error) return { error: error.message };
 
   try {
-    const { count, error: cErr } = await supabase
-      .from("field_pricing_windows")
-      .select("id", { count: "exact", head: true })
-      .eq("field_id", fieldId);
-    if (!cErr && (count ?? 0) <= 1) {
+    const specials = parseSpecialsFromForm(formData);
+    await replacePricingWindowsForField(
+      supabase,
+      fieldId,
+      parsed.data.hourlyPrice,
+      specials,
+    );
+  } catch {
+    try {
       await replacePricingWindowsSingleBand(
         supabase,
         fieldId,
         parsed.data.hourlyPrice,
       );
+    } catch {
+      /* sin migración de ventanas */
     }
-  } catch {
-    /* sin migración de ventanas */
   }
 
   revalidatePath("/admin/locales");

@@ -15,7 +15,7 @@ export async function getVenuesWithFieldsForOwner(
 ): Promise<VenueWithFields[]> {
   const [venues, fields] = await Promise.all([
     getAllVenuesByOwner(ownerId),
-    getAllFieldsByOwner(ownerId, { withPricingWindows: false }),
+    getAllFieldsByOwner(ownerId, { withPricingWindows: true }),
   ]);
 
   const byVenue = new Map<string, Field[]>();

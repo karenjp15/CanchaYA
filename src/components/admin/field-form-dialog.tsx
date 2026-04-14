@@ -32,6 +32,7 @@ import {
 import { Plus, Pencil, Upload, X } from "lucide-react";
 import type { Field as FieldRow } from "@/lib/data/field-model";
 import type { Venue } from "@/lib/data/venues";
+import { FieldPricingEditor } from "@/components/admin/field-pricing-editor";
 
 type Props = {
   mode: "create" | "edit";
@@ -50,14 +51,6 @@ type Props = {
 const FOOTBALL_CAPS = ["F5", "F7", "F9", "F11"] as const;
 
 const initial: FieldActionState = {};
-
-function formatHintCOP(n: number) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 export function FieldFormDialog({
   mode,
@@ -222,7 +215,7 @@ export function FieldFormDialog({
           )
         }
       />
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl max-h-[min(90dvh,900px)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Crear cancha" : "Editar cancha"}
@@ -552,86 +545,14 @@ export function FieldFormDialog({
               </>
             )}
 
-            <Field>
-              <FieldLabel htmlFor="af-price">Precio / hora (COP)</FieldLabel>
-              <FieldContent className="space-y-2">
-                <Input
-                  id="af-price"
-                  name="hourlyPrice"
-                  type="number"
-                  min={0}
-                  required
-                  defaultValue={field?.hourly_price ?? ""}
-                />
-                {priceHint && priceHint.sample_count > 0 ? (
-                  <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                    <p className="font-medium text-foreground">
-                      Referencia de mercado (anónima)
-                    </p>
-                    <p>
-                      {priceHint.sample_count} cancha
-                      {priceHint.sample_count === 1 ? "" : "s"} similar
-                      {priceHint.sample_count === 1 ? "" : "es"}{" "}
-                      {inferredCityLabel
-                        ? `en ${inferredCityLabel}`
-                        : "en la plataforma (sin ciudad clara en la dirección)"}
-                      {priceHint.p25 != null &&
-                      priceHint.p75 != null &&
-                      priceHint.p50 != null ? (
-                        <>
-                          : típico entre{" "}
-                          <span className="font-semibold text-foreground">
-                            {formatHintCOP(priceHint.p25)}
-                          </span>{" "}
-                          y{" "}
-                          <span className="font-semibold text-foreground">
-                            {formatHintCOP(priceHint.p75)}
-                          </span>{" "}
-                          (mediana{" "}
-                          <span className="font-semibold text-foreground">
-                            {formatHintCOP(priceHint.p50)}
-                          </span>
-                          ).
-                        </>
-                      ) : null}
-                    </p>
-                    {priceHint.low_confidence ? (
-                      <p className="mt-1 text-[11px]">
-                        Poca muestra: usa la sugerencia solo como guía.
-                      </p>
-                    ) : null}
-                    {priceHint.suggested != null ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-2 h-8"
-                        onClick={() => {
-                          const el = document.getElementById(
-                            "af-price",
-                          ) as HTMLInputElement | null;
-                          if (el)
-                            el.value = String(
-                              Math.round(priceHint.suggested ?? 0),
-                            );
-                        }}
-                      >
-                        Usar sugerido ({formatHintCOP(priceHint.suggested)})
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : priceHint && priceHint.sample_count === 0 ? (
-                  <p className="text-[11px] text-muted-foreground">
-                    No hay suficientes canchas públicas similares{" "}
-                    {inferredCityLabel
-                      ? `en ${inferredCityLabel}`
-                      : "en la plataforma"}{" "}
-                    para comparar. Prueba otro deporte, capacidad o superficie, o
-                    revisa la dirección del establecimiento.
-                  </p>
-                ) : null}
-              </FieldContent>
-            </Field>
+            <FieldPricingEditor
+              formInstanceKey={`${open}-${mode}-${field?.id ?? "new"}-${venueIdSelect}-${field?.updated_at ?? ""}`}
+              fieldId={mode === "edit" ? field?.id : undefined}
+              initialHourlyPrice={field?.hourly_price?.toString() ?? ""}
+              initialPricingWindows={field?.pricing_windows}
+              priceHint={priceHint}
+              inferredCityLabel={inferredCityLabel ?? null}
+            />
           </FieldGroup>
 
           <DialogFooter>

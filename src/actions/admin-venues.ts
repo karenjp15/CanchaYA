@@ -58,7 +58,6 @@ export async function createVenue(
   if (error) return { error: error.message };
 
   revalidatePath("/admin/locales");
-  revalidatePath("/admin/canchas");
   revalidatePath("/explorar");
   return { message: "Establecimiento creado" };
 }

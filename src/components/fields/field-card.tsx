@@ -14,13 +14,10 @@ import {
 } from "@/lib/data/field-model";
 import type { FieldWithAvailability } from "@/lib/data/field-availability";
 import { fieldSportDetailLine, fieldSurfaceOrCourtLine } from "@/lib/field-display";
-import {
-  formatPadelPricingHint,
-  padelSlotTotalRange,
-} from "@/lib/field-pricing";
-import { totalPriceFromHourlyAndMinutes } from "@/lib/pricing";
+import { formatPadelPricingHint } from "@/lib/field-pricing";
 import type { SportType } from "@/types/database.types";
-import { MapPin, Car, Wine, ShieldCheck, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MapPin, Car, Wine, ShieldCheck } from "lucide-react";
 
 function formatCOP(amount: number) {
   return new Intl.NumberFormat("es-CO", {
@@ -36,6 +33,11 @@ function isWithAvailability(f: CardField): f is FieldWithAvailability {
   return "hasAvailabilityToday" in f;
 }
 
+/** Una sola línea fluida para la card (evita saltos que rompen line-clamp). */
+function addressCardLine(field: CardField): string {
+  return fieldAddress(field).replace(/\s*\n+\s*/g, " · ").trim();
+}
+
 export function FieldCard({
   field,
   sport,
@@ -45,26 +47,24 @@ export function FieldCard({
 }) {
   const price = Number(field.hourly_price);
   const venue = fieldVenueName(field);
-  const padelRange =
-    field.sport === "PADEL" && (field.pricing_windows?.length ?? 0) > 0
-      ? padelSlotTotalRange(field.pricing_windows ?? [], field.slot_duration_minutes)
-      : null;
   const padelHint =
     field.sport === "PADEL" && (field.pricing_windows?.length ?? 0) > 0
       ? formatPadelPricingHint(field.pricing_windows ?? [], formatCOP)
       : null;
-  const totalReal = padelRange
-    ? padelRange.valleyTotal
-    : totalPriceFromHourlyAndMinutes(price, field.slot_duration_minutes);
   const detail = fieldSportDetailLine(field);
   const surfaceLine = fieldSurfaceOrCourtLine(field);
   const verified =
     isWithAvailability(field) && field.hasAvailabilityToday;
 
+  const addrLine = addressCardLine(field);
+
   return (
-    <Link href={`/canchas/${field.id}?sport=${sport}`}>
-      <Card className="group cursor-pointer transition-shadow hover:shadow-md">
-        <div className="relative h-36 w-full overflow-hidden rounded-t-xl bg-muted">
+    <Link
+      href={`/canchas/${field.id}?sport=${sport}`}
+      className="flex h-full min-h-0 w-full min-w-0 flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      <Card className="group h-full min-h-0 flex-1 cursor-pointer flex-col transition-shadow hover:shadow-md">
+        <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-t-xl bg-muted">
           {field.image_url ? (
             <Image
               src={field.image_url}
@@ -78,89 +78,89 @@ export function FieldCard({
               {field.sport === "PADEL" ? "🎾" : "⚽"}
             </div>
           )}
-          <div className="absolute right-2 top-2 max-w-[min(100%,11rem)] text-right">
-            <Badge className="border-0 bg-warning text-warning-foreground text-[10px] font-bold leading-tight shadow-sm sm:text-xs">
+          <div className="absolute right-2 top-2 max-w-[min(100%,11rem)] min-h-[2.25rem] text-right">
+            <Badge
+              className={cn(
+                "max-w-full border-0 bg-warning text-warning-foreground text-[10px] font-bold leading-tight shadow-sm sm:text-xs",
+                padelHint && "h-auto min-h-5 whitespace-normal py-1",
+              )}
+            >
               {padelHint ? (
-                <span className="line-clamp-2">{padelHint}</span>
+                <span className="line-clamp-2 break-words text-left" title={padelHint}>
+                  {padelHint}
+                </span>
               ) : (
-                <span>{formatCOP(price)}/h</span>
+                <span className="block truncate" title={`${formatCOP(price)}/h`}>
+                  {formatCOP(price)}/h
+                </span>
               )}
             </Badge>
           </div>
         </div>
-        <CardHeader className="pb-1">
-          <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
+        <CardHeader className="shrink-0 pb-1">
+          <CardTitle
+            className="line-clamp-1 group-hover:text-primary transition-colors"
+            title={venue || field.name}
+          >
             {venue || field.name}
           </CardTitle>
           {venue ? (
-            <p className="text-xs text-muted-foreground line-clamp-1 -mt-0.5">
+            <p
+              className="line-clamp-1 text-xs text-muted-foreground -mt-0.5"
+              title={field.name}
+            >
               {field.name}
             </p>
-          ) : null}
+          ) : (
+            <div className="min-h-[1.125rem] -mt-0.5" aria-hidden />
+          )}
         </CardHeader>
-        <CardContent className="space-y-2 text-xs text-muted-foreground">
-          <div
-            className="flex items-start gap-2 rounded-lg border border-border/80 bg-muted/30 px-2.5 py-2"
-            data-validation-card
-          >
-            {verified ? (
-              <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />
-            ) : (
-              <AlertCircle className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-            )}
-            <div className="min-w-0 space-y-0.5">
-              <p className="font-medium text-foreground">
-                {verified
-                  ? "Disponibilidad verificada hoy"
-                  : "Sin cupos hoy — elige otra fecha en el detalle"}
-              </p>
-              <p className="text-[11px] leading-snug">
-                {padelRange ? (
-                  <>
-                    Slot {field.slot_duration_minutes} min · valle{" "}
-                    <span className="font-semibold text-foreground">
-                      {formatCOP(padelRange.valleyTotal)}
-                    </span>
-                    {" · "}
-                    tarde{" "}
-                    <span className="font-semibold text-foreground">
-                      {formatCOP(padelRange.peakTotal)}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    Precio final real ({field.slot_duration_minutes} min):{" "}
-                    <span className="font-semibold text-foreground">
-                      {formatCOP(totalReal)}
-                    </span>
-                  </>
-                )}
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-2 text-xs text-muted-foreground">
+          {verified ? (
+            <div className="flex shrink-0 items-center gap-2">
+              <ShieldCheck
+                className="size-4 shrink-0 text-primary"
+                aria-hidden
+              />
+              <p className="line-clamp-2 min-w-0 font-medium text-primary">
+                Disponibilidad verificada hoy
               </p>
             </div>
-          </div>
-          <div className="flex items-start gap-1">
-            <MapPin className="size-3.5 shrink-0 mt-0.5" />
-            <span className="line-clamp-3 whitespace-pre-line leading-snug">
-              {fieldAddress(field)}
+          ) : null}
+          <div className="flex min-h-[2.5rem] shrink-0 items-start gap-1">
+            <MapPin className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span
+              className="line-clamp-2 min-w-0 break-words leading-snug"
+              title={addrLine || undefined}
+            >
+              {addrLine || "—"}
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline" className="text-[10px]">
-              {detail}
+          <div className="mt-auto flex min-h-[1.75rem] flex-wrap gap-1.5">
+            <Badge
+              variant="outline"
+              className="max-w-[min(100%,12rem)] min-w-0 shrink justify-start text-[10px]"
+              title={detail}
+            >
+              <span className="min-w-0 truncate">{detail}</span>
             </Badge>
             {surfaceLine && detail !== surfaceLine ? (
-              <Badge variant="outline" className="text-[10px]">
-                {surfaceLine}
+              <Badge
+                variant="outline"
+                className="max-w-[min(100%,12rem)] min-w-0 shrink justify-start text-[10px]"
+                title={surfaceLine}
+              >
+                <span className="min-w-0 truncate">{surfaceLine}</span>
               </Badge>
             ) : null}
             {field.venues.parking_available && (
               <Badge variant="outline" className="text-[10px] gap-0.5">
-                <Car className="size-2.5" /> Parqueadero
+                <Car className="size-2.5 shrink-0" aria-hidden /> Parqueadero
               </Badge>
             )}
             {field.venues.sells_liquor && (
               <Badge variant="outline" className="text-[10px] gap-0.5">
-                <Wine className="size-2.5" /> Licor
+                <Wine className="size-2.5 shrink-0" aria-hidden /> Licor
               </Badge>
             )}
           </div>

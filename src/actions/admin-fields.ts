@@ -148,6 +148,7 @@ export async function createField(
     /* sin tabla field_pricing_windows */
   }
 
+  revalidatePath("/admin/locales");
   revalidatePath("/admin/canchas");
   revalidatePath("/explorar");
   return { message: "Cancha creada exitosamente" };
@@ -216,6 +217,7 @@ export async function updateField(
     /* sin migración de ventanas */
   }
 
+  revalidatePath("/admin/locales");
   revalidatePath("/admin/canchas");
   revalidatePath("/explorar");
   return { message: "Cancha actualizada" };
@@ -233,6 +235,7 @@ export async function toggleFieldActive(
 
   if (error) return { error: error.message };
 
+  revalidatePath("/admin/locales");
   revalidatePath("/admin/canchas");
   return { message: isActive ? "Cancha activada" : "Cancha desactivada" };
 }

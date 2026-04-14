@@ -89,6 +89,21 @@ function matchCity(t: string, slug: ExplorarCitySlug): boolean {
   }
 }
 
+/**
+ * Primera ciudad de explorar que coincide con la dirección (para segmentar precios mercado).
+ * `null` si no matchea ninguna ciudad conocida (el RPC puede usar slug vacío = sin filtro ciudad).
+ */
+export function inferExplorarCitySlugFromAddress(
+  address: string | null | undefined,
+): ExplorarCitySlug | null {
+  const t = normAddress(address ?? "");
+  if (!t) return null;
+  for (const c of COLOMBIA_EXPLORAR_CITIES) {
+    if (matchCity(t, c.slug)) return c.slug;
+  }
+  return null;
+}
+
 /** `slug` vacío o desconocido → no filtra. */
 export function venueAddressMatchesCitySlug(
   address: string | null | undefined,

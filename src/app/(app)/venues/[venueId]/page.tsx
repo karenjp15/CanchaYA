@@ -87,7 +87,7 @@ export default async function VenueDetailPage({ params, searchParams }: Props) {
           No hay canchas de {SPORT_LABELS[sport]} en este club.
         </div>
       ) : (
-        <div className="grid auto-rows-max grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
           {fieldsWithAvail.map((f) => (
             <FieldCard key={f.id} field={f} sport={sport} />
           ))}

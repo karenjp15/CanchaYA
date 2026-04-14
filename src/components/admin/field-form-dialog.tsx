@@ -1,8 +1,12 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { createField, updateField, type FieldActionState } from "@/actions/admin-fields";
+import {
+  fetchMarketHourlyPriceHint,
+  type MarketHourlyPriceHint,
+} from "@/actions/admin-market-hint";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -43,6 +47,14 @@ const FOOTBALL_CAPS = ["F5", "F7", "F9", "F11"] as const;
 
 const initial: FieldActionState = {};
 
+function formatHintCOP(n: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
 export function FieldFormDialog({
   mode,
   field,
@@ -58,10 +70,32 @@ export function FieldFormDialog({
   const [sport, setSport] = useState<"PADEL" | "FUTBOL">(
     field?.sport ?? "FUTBOL",
   );
+  const [footballCap, setFootballCap] = useState<string>(
+    field?.football_capacity ?? "F5",
+  );
+  const [footballSurf, setFootballSurf] = useState<string>(
+    field?.football_surface ?? "SYNTHETIC_GRASS",
+  );
+  const [padelWallSt, setPadelWallSt] = useState<string>(
+    field?.padel_wall_material ?? "GLASS",
+  );
+  const [padelLocSt, setPadelLocSt] = useState<string>(
+    field?.padel_location ?? "OUTDOOR",
+  );
+  const [slotDur, setSlotDur] = useState<number>(
+    field?.slot_duration_minutes === 60 ? 60 : 90,
+  );
+  const [venueIdSelect, setVenueIdSelect] = useState<string>(
+    () => fixedVenueId ?? defaultVenueId ?? "",
+  );
+  const [priceHint, setPriceHint] = useState<MarketHourlyPriceHint | null>(
+    null,
+  );
   const [imagePreview, setImagePreview] = useState<string | null>(
     field?.image_url ?? null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const priceInputRef = useRef<HTMLInputElement>(null);
 
   const fixedVenue =
     fixedVenueId != null

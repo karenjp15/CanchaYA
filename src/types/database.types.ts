@@ -349,6 +349,19 @@ export type Database = {
           updated_at: string;
         }[];
       };
+      market_hourly_price_hint: {
+        Args: {
+          p_sport: SportType;
+          p_city_slug: string;
+          p_football_capacity: FootballCapacity | null;
+          p_football_surface: FootballSurface | null;
+          p_padel_wall: PadelWallMaterial | null;
+          p_padel_location: PadelCourtLocation | null;
+          p_slot_duration_minutes: number;
+          p_exclude_field_id?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
     };
     Enums: {
       user_role: UserRole;

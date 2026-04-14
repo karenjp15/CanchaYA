@@ -129,7 +129,7 @@ export default async function ExplorarPage({ searchParams }: Props) {
             ) : (
               <div
                 className={cn(
-                  "grid auto-rows-max gap-4 md:gap-5",
+                  "grid items-stretch gap-4 md:gap-5",
                   /* Móvil ancho / sin rail: 2 cols. Con sidebar (md–lg) el carril es estrecho: 1 col. lg+: 2 cols otra vez. */
                   "grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2",
                 )}

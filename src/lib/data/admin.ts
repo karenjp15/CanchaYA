@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { addDaysToInstantISO, getMondayOfWeekBogotaISO } from "@/lib/date-utils";
+import {
+  addDaysToInstantISO,
+  getMondayOfWeekBogotaISO,
+  toBogotaDateString,
+} from "@/lib/date-utils";
 import type { BookingStatus } from "@/types/database.types";
 
 export type AdminMetrics = {
@@ -278,6 +282,12 @@ export async function getWeekGridBookings(
   return mapRowsToGridBookings(data);
 }
 
+export type AdminClientSegment =
+  | "CHAMPION"
+  | "EN_RIESGO"
+  | "POTENCIAL"
+  | "REGULAR";
+
 export type AdminClient = {
   id: string;
   name: string;
@@ -285,6 +295,39 @@ export type AdminClient = {
   phone: string;
   reservas: number;
   totalGastado: number;
+  days_since_last_booking: number;
+  segmento: AdminClientSegment;
+  /** Centro de la reserva más reciente (p. ej. mensajes de contacto). */
+  contact_venue_name: string;
+};
+
+function daysSinceLastBookingBogota(lastStartIso: string): number {
+  const todayYmd = toBogotaDateString(new Date());
+  const lastYmd = toBogotaDateString(new Date(lastStartIso));
+  const t = new Date(`${todayYmd}T12:00:00-05:00`).getTime();
+  const l = new Date(`${lastYmd}T12:00:00-05:00`).getTime();
+  return Math.max(0, Math.floor((t - l) / (24 * 60 * 60 * 1000)));
+}
+
+function segmentoFromMetrics(
+  reservas: number,
+  daysSince: number,
+): AdminClientSegment {
+  if (reservas > 10 && daysSince < 7) return "CHAMPION";
+  if (reservas > 5 && daysSince > 15) return "EN_RIESGO";
+  if (reservas < 3 && daysSince < 7) return "POTENCIAL";
+  return "REGULAR";
+}
+
+type AdminClientAgg = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  reservas: number;
+  totalGastado: number;
+  lastBookingAt: string;
+  contactVenueName: string;
 };
 
 export async function getAdminClients(
@@ -303,14 +346,14 @@ export async function getAdminClients(
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "user_id, total_price, status, profiles:user_id(id, full_name, email, phone)",
+      "user_id, total_price, status, start_time, profiles:user_id(id, full_name, email, phone), fields!inner(name, venues(name))",
     )
     .in("field_id", ids)
     .in("status", ["PENDING", "PAID"]);
 
   if (error || !data) return [];
 
-  const map = new Map<string, AdminClient>();
+  const map = new Map<string, AdminClientAgg>();
 
   for (const b of data) {
     const profile = b.profiles as unknown as {
@@ -322,12 +365,23 @@ export async function getAdminClients(
 
     if (!profile) continue;
 
+    const field = b.fields as {
+      name: string;
+      venues: { name: string } | null;
+    } | null;
+    const venueName = (field?.venues?.name ?? "").trim() || "nuestro centro";
+
+    const startTime = b.start_time as string;
     const existing = map.get(profile.id);
     const price = Number(b.total_price);
 
     if (existing) {
       existing.reservas += 1;
       existing.totalGastado += b.status === "PAID" ? price : 0;
+      if (startTime > existing.lastBookingAt) {
+        existing.lastBookingAt = startTime;
+        existing.contactVenueName = venueName;
+      }
     } else {
       map.set(profile.id, {
         id: profile.id,
@@ -336,11 +390,30 @@ export async function getAdminClients(
         phone: profile.phone ?? "",
         reservas: 1,
         totalGastado: b.status === "PAID" ? price : 0,
+        lastBookingAt: startTime,
+        contactVenueName: venueName,
       });
     }
   }
 
-  return Array.from(map.values()).sort((a, b) => b.reservas - a.reservas);
+  return Array.from(map.values())
+    .map((row) => {
+      const days_since_last_booking = daysSinceLastBookingBogota(
+        row.lastBookingAt,
+      );
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        reservas: row.reservas,
+        totalGastado: row.totalGastado,
+        days_since_last_booking,
+        segmento: segmentoFromMetrics(row.reservas, days_since_last_booking),
+        contact_venue_name: row.contactVenueName,
+      } satisfies AdminClient;
+    })
+    .sort((a, b) => b.reservas - a.reservas);
 }
 
 export function getMondayOfCurrentWeek(): string {

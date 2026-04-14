@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { AdminClientsTable } from "@/components/admin/admin-clients-table";
 import { getAdminClients } from "@/lib/data/admin";
 import { getProfile } from "@/lib/auth/profile";
 import { redirect } from "next/navigation";
@@ -37,46 +37,7 @@ export default async function AdminClientesPage() {
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
-              <th className="px-4 py-2.5 font-medium">Nombre</th>
-              <th className="px-4 py-2.5 font-medium">Email</th>
-              <th className="px-4 py-2.5 font-medium">Teléfono</th>
-              <th className="px-4 py-2.5 font-medium text-center">Reservas</th>
-              <th className="px-4 py-2.5 font-medium text-right">Total gastado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clients.map((c) => (
-              <tr
-                key={c.id}
-                className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-              >
-                <td className="px-4 py-3 font-medium">{c.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
-                <td className="px-4 py-3 text-muted-foreground">{c.phone}</td>
-                <td className="px-4 py-3 text-center">
-                  <Badge variant="outline" className="text-[10px]">
-                    {c.reservas}
-                  </Badge>
-                </td>
-                <td className="px-4 py-3 text-right font-medium text-primary">
-                  {formatCOP(c.totalGastado)}
-                </td>
-              </tr>
-            ))}
-            {clients.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  Aún no hay clientes con reservas.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AdminClientsTable clients={clients} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card size="sm">

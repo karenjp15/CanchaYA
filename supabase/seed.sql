@@ -60,7 +60,8 @@ BEGIN
       (v_admin_id, 'Urban Kick Suba', E'Av. Suba #115-30\nSuba\nBogotá, Colombia', 4.7128, -74.0658, true, false),
       (v_admin_id, 'Norte Fútbol 22', E'Cra 7 #172-50\nUsaquén\nBogotá, Colombia', 4.7451, -74.0328, true, true),
       (v_admin_id, 'GOL 26 CANCHA ABIERTA', E'Calle 26 #78-30\nTeusaquillo\nBogotá, Colombia', 4.6585, -74.1100, true, true),
-      (v_admin_id, 'PADEL PLACE PLAZA CLARO', E'Carrera 68a #24b-10\nCentro Comercial Plaza Claro\nBogotá, Colombia', 4.6395, -74.0985, true, true);
+      (v_admin_id, 'PADEL PLACE PLAZA CLARO', E'Carrera 68a #24b-10\nCentro Comercial Plaza Claro\nBogotá, Colombia', 4.6395, -74.0985, true, true),
+      (v_admin_id, 'Arena Los Cedros — Demo', E'Calle 85 #12-40\nZona Rosa\nBogotá, Colombia', 4.6669, -74.0553, true, false);
 
     INSERT INTO public.fields (
       owner_id,
@@ -103,7 +104,8 @@ BEGIN
         ('GOL 26 CANCHA ABIERTA', 'Pista Pádel 1', 'PADEL'::public.sport_type, NULL::public.football_capacity, NULL::public.football_surface, 'GLASS'::public.padel_wall_material, 'OUTDOOR'::public.padel_court_location, 90, 140000, '/fields/field-1.jpg', true),
         ('PADEL PLACE PLAZA CLARO', 'Cancha 1 — Fútbol 5', 'FUTBOL'::public.sport_type, 'F5'::public.football_capacity, 'SYNTHETIC_GRASS'::public.football_surface, NULL::public.padel_wall_material, NULL::public.padel_court_location, 60, 120000, '/fields/field-2.jpg', true),
         ('PADEL PLACE PLAZA CLARO', 'Cancha 2 — Fútbol 5', 'FUTBOL'::public.sport_type, 'F5'::public.football_capacity, 'SYNTHETIC_GRASS'::public.football_surface, NULL::public.padel_wall_material, NULL::public.padel_court_location, 60, 120000, '/fields/field-3.jpg', true),
-        ('PADEL PLACE PLAZA CLARO', 'Fútbol 9 (full)', 'FUTBOL'::public.sport_type, 'F9'::public.football_capacity, 'SYNTHETIC_GRASS'::public.football_surface, NULL::public.padel_wall_material, NULL::public.padel_court_location, 60, 220000, '/fields/field-1.jpg', false)
+        ('PADEL PLACE PLAZA CLARO', 'Fútbol 9 (full)', 'FUTBOL'::public.sport_type, 'F9'::public.football_capacity, 'SYNTHETIC_GRASS'::public.football_surface, NULL::public.padel_wall_material, NULL::public.padel_court_location, 60, 220000, '/fields/field-1.jpg', false),
+        ('Arena Los Cedros — Demo', 'Cancha F7 · Cedros', 'FUTBOL'::public.sport_type, 'F7'::public.football_capacity, 'SYNTHETIC_GRASS'::public.football_surface, NULL::public.padel_wall_material, NULL::public.padel_court_location, 60, 90000, '/fields/field-6.jpg', true)
     ) AS d(venue_name, name, sport, football_capacity, football_surface, padel_wall, padel_loc, slot_min, hourly_price, image_url, list_in_explore)
     JOIN public.venues v ON v.owner_id = v_admin_id AND v.name = d.venue_name;
 

@@ -8,8 +8,9 @@ import { MapPin, Car, Wine } from "lucide-react";
 import { FOOTBALL_SURFACE_LABELS, SPORT_LABELS } from "@/lib/constants";
 import { fieldSportDetailLine } from "@/lib/field-display";
 import Link from "next/link";
+import { FieldActiveToggle } from "@/components/admin/field-active-toggle";
 
-export const metadata = { title: "Establecimientos" };
+export const metadata = { title: "Centros y canchas" };
 
 function formatCOP(n: number) {
   return new Intl.NumberFormat("es-CO", {
@@ -29,19 +30,11 @@ export default async function AdminLocalesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Mis establecimientos</h1>
+               <div>
+          <h1 className="text-2xl font-semibold">Mis centros deportivos</h1>
           <p className="text-sm text-muted-foreground">
-            Cada establecimiento es el lugar (dirección y servicios). Dentro
-            registras las canchas (pádel o fútbol). También puedes gestionarlas
-            en{" "}
-            <Link
-              href="/admin/canchas"
-              className="font-medium text-primary underline-offset-2 hover:underline"
-            >
-              Canchas
-            </Link>
-            .
+            Cada bloque es un establecimiento (nombre, dirección, servicios).
+            Debajo administras sus canchas, precios y visibilidad.
           </p>
         </div>
         <VenueFormDialog mode="create" />
@@ -131,7 +124,7 @@ export default async function AdminLocalesPage() {
                           {f.slot_duration_minutes} min
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1">
                         <Link
                           href={`/canchas/${f.id}?sport=${f.sport}`}
                           className="text-xs font-medium text-primary underline-offset-2 hover:underline"
@@ -143,6 +136,7 @@ export default async function AdminLocalesPage() {
                           field={f}
                           venues={allVenues}
                         />
+                        <FieldActiveToggle fieldId={f.id} isActive={f.is_active} />
                       </div>
                     </li>
                   ))}

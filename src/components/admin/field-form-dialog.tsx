@@ -25,6 +25,10 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  COLOMBIA_EXPLORAR_CITIES,
+  inferExplorarCitySlugFromAddress,
+} from "@/lib/colombia-cities";
 import { Plus, Pencil, Upload, X } from "lucide-react";
 import type { Field as FieldRow } from "@/lib/data/field-model";
 import type { Venue } from "@/lib/data/venues";
@@ -95,16 +99,90 @@ export function FieldFormDialog({
     field?.image_url ?? null,
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const priceInputRef = useRef<HTMLInputElement>(null);
 
   const fixedVenue =
     fixedVenueId != null
       ? venues.find((v) => v.id === fixedVenueId)
       : undefined;
-  const selectDefault =
-    fixedVenueId != null
-      ? fixedVenueId
-      : (defaultVenueId ?? venues[0]?.id ?? "");
+  useEffect(() => {
+    if (!open) return;
+    if (mode === "edit" && field) {
+      setSport(field.sport);
+      setFootballCap(field.football_capacity ?? "F5");
+      setFootballSurf(field.football_surface ?? "SYNTHETIC_GRASS");
+      setPadelWallSt(field.padel_wall_material ?? "GLASS");
+      setPadelLocSt(field.padel_location ?? "OUTDOOR");
+      setSlotDur(field.slot_duration_minutes === 60 ? 60 : 90);
+      setVenueIdSelect(field.venue_id);
+      return;
+    }
+    if (mode === "create") {
+      setSport("FUTBOL");
+      setFootballCap("F5");
+      setFootballSurf("SYNTHETIC_GRASS");
+      setPadelWallSt("GLASS");
+      setPadelLocSt("OUTDOOR");
+      setSlotDur(90);
+      setVenueIdSelect(
+        fixedVenueId ?? defaultVenueId ?? venues[0]?.id ?? "",
+      );
+    }
+  }, [
+    open,
+    mode,
+    field?.id,
+    field?.sport,
+    field?.venue_id,
+    fixedVenueId,
+    defaultVenueId,
+    venues,
+  ]);
+
+  useEffect(() => {
+    if (!open) {
+      setPriceHint(null);
+      return;
+    }
+    let cancelled = false;
+    const vid = fixedVenueId ?? venueIdSelect;
+    const v = venues.find((x) => x.id === vid);
+    void (async () => {
+      const h = await fetchMarketHourlyPriceHint({
+        venueAddress: v?.address ?? null,
+        sport,
+        footballCapacity:
+          sport === "FUTBOL"
+            ? (footballCap as "F5" | "F7" | "F9" | "F11")
+            : null,
+        footballSurface:
+          sport === "FUTBOL"
+            ? (footballSurf as "SYNTHETIC_GRASS" | "NATURAL_GRASS")
+            : null,
+        padelWall: sport === "PADEL" ? (padelWallSt as "GLASS" | "WALL") : null,
+        padelLocation:
+          sport === "PADEL" ? (padelLocSt as "INDOOR" | "OUTDOOR") : null,
+        slotDurationMinutes: sport === "FUTBOL" ? 60 : slotDur,
+        excludeFieldId: mode === "edit" ? field?.id : null,
+      });
+      if (!cancelled) setPriceHint(h);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    sport,
+    footballCap,
+    footballSurf,
+    padelWallSt,
+    padelLocSt,
+    slotDur,
+    venueIdSelect,
+    fixedVenueId,
+    venues,
+    mode,
+    field?.id,
+  ]);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -117,6 +195,16 @@ export function FieldFormDialog({
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
+
+  const venueForHint = venues.find(
+    (x) => x.id === (fixedVenueId ?? venueIdSelect),
+  );
+  const inferredCitySlug = inferExplorarCitySlugFromAddress(
+    venueForHint?.address,
+  );
+  const inferredCityLabel = inferredCitySlug
+    ? COLOMBIA_EXPLORAR_CITIES.find((c) => c.slug === inferredCitySlug)?.label
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -189,8 +277,9 @@ export function FieldFormDialog({
                     id="af-venue"
                     name="venueId"
                     required
+                    value={venueIdSelect}
+                    onChange={(e) => setVenueIdSelect(e.target.value)}
                     className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-                    defaultValue={selectDefault}
                   >
                     {venues.length === 0 ? (
                       <option value="">Crea un establecimiento primero</option>
@@ -325,11 +414,8 @@ export function FieldFormDialog({
                             type="radio"
                             name="footballCapacity"
                             value={t}
-                            defaultChecked={
-                              field
-                                ? field.football_capacity === t
-                                : t === "F5"
-                            }
+                            checked={footballCap === t}
+                            onChange={() => setFootballCap(t)}
                             className="sr-only"
                           />
                           {t}
@@ -349,11 +435,8 @@ export function FieldFormDialog({
                           type="radio"
                           name="footballSurface"
                           value="SYNTHETIC_GRASS"
-                          defaultChecked={
-                            field
-                              ? field.football_surface === "SYNTHETIC_GRASS"
-                              : true
-                          }
+                          checked={footballSurf === "SYNTHETIC_GRASS"}
+                          onChange={() => setFootballSurf("SYNTHETIC_GRASS")}
                           className="sr-only"
                         />
                         Grama sintética
@@ -367,9 +450,8 @@ export function FieldFormDialog({
                           type="radio"
                           name="footballSurface"
                           value="NATURAL_GRASS"
-                          defaultChecked={
-                            field?.football_surface === "NATURAL_GRASS"
-                          }
+                          checked={footballSurf === "NATURAL_GRASS"}
+                          onChange={() => setFootballSurf("NATURAL_GRASS")}
                           className="sr-only"
                         />
                         Grama natural
@@ -386,9 +468,8 @@ export function FieldFormDialog({
                     <select
                       id="af-slot-dur"
                       name="slotDurationMinutes"
-                      defaultValue={String(
-                        field?.slot_duration_minutes === 60 ? 60 : 90,
-                      )}
+                      value={String(slotDur)}
+                      onChange={(e) => setSlotDur(Number(e.target.value))}
                       className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
                     >
                       <option value="60">60 minutos</option>
@@ -409,11 +490,8 @@ export function FieldFormDialog({
                           type="radio"
                           name="padelWall"
                           value="GLASS"
-                          defaultChecked={
-                            field
-                              ? field.padel_wall_material === "GLASS"
-                              : true
-                          }
+                          checked={padelWallSt === "GLASS"}
+                          onChange={() => setPadelWallSt("GLASS")}
                           className="sr-only"
                         />
                         Cristal
@@ -427,9 +505,8 @@ export function FieldFormDialog({
                           type="radio"
                           name="padelWall"
                           value="WALL"
-                          defaultChecked={
-                            field?.padel_wall_material === "WALL"
-                          }
+                          checked={padelWallSt === "WALL"}
+                          onChange={() => setPadelWallSt("WALL")}
                           className="sr-only"
                         />
                         Muro
@@ -448,11 +525,8 @@ export function FieldFormDialog({
                           type="radio"
                           name="padelLocation"
                           value="INDOOR"
-                          defaultChecked={
-                            field
-                              ? field.padel_location === "INDOOR"
-                              : false
-                          }
+                          checked={padelLocSt === "INDOOR"}
+                          onChange={() => setPadelLocSt("INDOOR")}
                           className="sr-only"
                         />
                         Indoor
@@ -466,11 +540,8 @@ export function FieldFormDialog({
                           type="radio"
                           name="padelLocation"
                           value="OUTDOOR"
-                          defaultChecked={
-                            field
-                              ? field.padel_location === "OUTDOOR"
-                              : true
-                          }
+                          checked={padelLocSt === "OUTDOOR"}
+                          onChange={() => setPadelLocSt("OUTDOOR")}
                           className="sr-only"
                         />
                         Outdoor
@@ -483,7 +554,7 @@ export function FieldFormDialog({
 
             <Field>
               <FieldLabel htmlFor="af-price">Precio / hora (COP)</FieldLabel>
-              <FieldContent>
+              <FieldContent className="space-y-2">
                 <Input
                   id="af-price"
                   name="hourlyPrice"
@@ -492,6 +563,73 @@ export function FieldFormDialog({
                   required
                   defaultValue={field?.hourly_price ?? ""}
                 />
+                {priceHint && priceHint.sample_count > 0 ? (
+                  <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground">
+                      Referencia de mercado (anónima)
+                    </p>
+                    <p>
+                      {priceHint.sample_count} cancha
+                      {priceHint.sample_count === 1 ? "" : "s"} similar
+                      {priceHint.sample_count === 1 ? "" : "es"}{" "}
+                      {inferredCityLabel
+                        ? `en ${inferredCityLabel}`
+                        : "en la plataforma (sin ciudad clara en la dirección)"}
+                      {priceHint.p25 != null &&
+                      priceHint.p75 != null &&
+                      priceHint.p50 != null ? (
+                        <>
+                          : típico entre{" "}
+                          <span className="font-semibold text-foreground">
+                            {formatHintCOP(priceHint.p25)}
+                          </span>{" "}
+                          y{" "}
+                          <span className="font-semibold text-foreground">
+                            {formatHintCOP(priceHint.p75)}
+                          </span>{" "}
+                          (mediana{" "}
+                          <span className="font-semibold text-foreground">
+                            {formatHintCOP(priceHint.p50)}
+                          </span>
+                          ).
+                        </>
+                      ) : null}
+                    </p>
+                    {priceHint.low_confidence ? (
+                      <p className="mt-1 text-[11px]">
+                        Poca muestra: usa la sugerencia solo como guía.
+                      </p>
+                    ) : null}
+                    {priceHint.suggested != null ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 h-8"
+                        onClick={() => {
+                          const el = document.getElementById(
+                            "af-price",
+                          ) as HTMLInputElement | null;
+                          if (el)
+                            el.value = String(
+                              Math.round(priceHint.suggested ?? 0),
+                            );
+                        }}
+                      >
+                        Usar sugerido ({formatHintCOP(priceHint.suggested)})
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : priceHint && priceHint.sample_count === 0 ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    No hay suficientes canchas públicas similares{" "}
+                    {inferredCityLabel
+                      ? `en ${inferredCityLabel}`
+                      : "en la plataforma"}{" "}
+                    para comparar. Prueba otro deporte, capacidad o superficie, o
+                    revisa la dirección del establecimiento.
+                  </p>
+                ) : null}
               </FieldContent>
             </Field>
           </FieldGroup>

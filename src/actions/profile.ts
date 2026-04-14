@@ -43,6 +43,7 @@ export async function updateProfile(
   if (error) return { error: error.message };
 
   revalidatePath("/user/perfil");
+  revalidatePath("/admin/perfil");
   return { message: "Perfil actualizado" };
 }
 

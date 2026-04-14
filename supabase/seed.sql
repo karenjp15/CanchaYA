@@ -1,14 +1,21 @@
 -- ==========================================================================
 -- CanchaYa Bogotá — Seed de prueba
 -- ==========================================================================
--- REQUISITO: Crear manualmente 2 usuarios desde el Dashboard de Supabase
+-- REQUISITO: Crear manualmente usuarios desde el Dashboard de Supabase
 -- (Authentication > Users > Add User, con "Auto Confirm User" marcado):
 --
---   1. Jugador:  kjuliethp@test.com  / 123456
---   2. Admin:    admin@test.com      / 123456
+--   1. Jugador:  kjuliethp@test.com      / 123456
+--   2. Admin A:   admin-completo@test.com / 123456  (dueño de la mayoría de locales demo)
+--   3. Admin B:   admin@test.com          / 123456  (solo Fútbol 31 + ORO NORTE tras migración)
 --
--- Luego cambiar el rol del admin en la tabla profiles:
---   UPDATE public.profiles SET role = 'ADMIN' WHERE email = 'admin@test.com';
+-- Roles ADMIN en profiles:
+--   UPDATE public.profiles SET role = 'ADMIN' WHERE email IN (
+--     'admin@test.com', 'admin-completo@test.com'
+--   );
+--
+-- Tras aplicar migraciones, `20260415140000_admin_test_limited_venues.sql` deja
+-- admin@test.com únicamente con los centros "Fútbol 31" y "ORO NORTE PÁDEL CLUB";
+-- el resto de canchas del seed pasan a admin-completo@test.com (o al otro ADMIN).
 --
 -- Después ejecutar este script en el SQL Editor.
 -- Requiere migraciones aplicadas: deporte (PADEL/FUTBOL), `venues` / `fields`,
@@ -29,6 +36,9 @@ DECLARE
   v_week_start timestamp;
   v_admin_booking_count int;
   v_field_ids uuid[];
+  v_full_admin uuid;
+  v_vid_f31 uuid;
+  v_fid_f31 uuid;
 BEGIN
   SELECT id INTO v_admin_id FROM public.profiles WHERE email = 'admin@test.com';
   SELECT id INTO v_player_id FROM public.profiles WHERE email = 'kjuliethp@test.com';
@@ -211,6 +221,90 @@ BEGIN
     END IF;
   ELSE
     RAISE NOTICE 'El admin ya tiene suficientes reservas; no se inserta el bloque demo.';
+  END IF;
+
+  -- ========================================================================
+  -- admin@test.com solo: Fútbol 31 + ORO NORTE PÁDEL CLUB (resto → admin-completo)
+  -- ========================================================================
+  SELECT id INTO v_full_admin FROM public.profiles
+  WHERE email = 'admin-completo@test.com' AND role = 'ADMIN'::public.user_role
+  LIMIT 1;
+
+  IF v_full_admin IS NOT NULL AND v_admin_id IS NOT NULL AND v_full_admin <> v_admin_id THEN
+    SELECT id INTO v_vid_f31 FROM public.venues WHERE name = 'Fútbol 31' LIMIT 1;
+    IF v_vid_f31 IS NULL THEN
+      INSERT INTO public.venues (
+        owner_id, name, address, latitude, longitude, parking_available, sells_liquor
+      )
+      VALUES (
+        v_admin_id,
+        'Fútbol 31',
+        E'Cra 11aa #65-15\nChapinero\nBogotá, Colombia',
+        4.6500, -74.0600, true, false
+      )
+      RETURNING id INTO v_vid_f31;
+
+      INSERT INTO public.fields (
+        owner_id, venue_id, name, sport,
+        football_capacity, football_surface,
+        padel_wall_material, padel_location,
+        slot_duration_minutes, hourly_price, image_url, is_active, list_in_explore
+      )
+      VALUES (
+        v_admin_id, v_vid_f31, 'Cancha principal F7', 'FUTBOL'::public.sport_type,
+        'F7'::public.football_capacity, 'SYNTHETIC_GRASS'::public.football_surface,
+        null, null,
+        60, 90000, '/fields/field-cancha31.jpg', true, true
+      )
+      RETURNING id INTO v_fid_f31;
+
+      INSERT INTO public.field_pricing_windows (
+        field_id, start_minute, end_minute, hourly_price, day_of_week
+      )
+      SELECT v_fid_f31, w.s, w.e, w.p, null::smallint
+      FROM (
+        VALUES
+          (360, 480, 90000::numeric),
+          (480, 900, 80000::numeric),
+          (900, 960, 90000::numeric),
+          (960, 1020, 110000::numeric),
+          (1020, 1080, 120000::numeric),
+          (1080, 1140, 130000::numeric),
+          (1140, 1200, 140000::numeric),
+          (1200, 1260, 150000::numeric),
+          (1260, 1380, 150000::numeric)
+      ) AS w(s, e, p);
+    END IF;
+
+    UPDATE public.fields f
+    SET owner_id = v_admin_id
+    FROM public.venues v
+    WHERE f.venue_id = v.id AND v.name IN ('Fútbol 31', 'ORO NORTE PÁDEL CLUB');
+
+    UPDATE public.venues
+    SET owner_id = v_admin_id
+    WHERE name IN ('Fútbol 31', 'ORO NORTE PÁDEL CLUB');
+
+    UPDATE public.fields f
+    SET owner_id = v_full_admin
+    FROM public.venues v
+    WHERE f.venue_id = v.id
+      AND v.owner_id = v_admin_id
+      AND v.name NOT IN ('Fútbol 31', 'ORO NORTE PÁDEL CLUB');
+
+    UPDATE public.venues
+    SET owner_id = v_full_admin
+    WHERE owner_id = v_admin_id
+      AND name NOT IN ('Fútbol 31', 'ORO NORTE PÁDEL CLUB');
+
+    UPDATE public.fields f
+    SET owner_id = v.owner_id
+    FROM public.venues v
+    WHERE f.venue_id = v.id AND f.owner_id IS DISTINCT FROM v.owner_id;
+
+    RAISE NOTICE 'Reparto admin: admin@test.com → Fútbol 31 + ORO NORTE; resto → admin-completo.';
+  ELSE
+    RAISE NOTICE 'Sin admin-completo@test.com (ADMIN): no se reparte; admin@test.com conserva todos los locales del seed.';
   END IF;
 
 END $$;

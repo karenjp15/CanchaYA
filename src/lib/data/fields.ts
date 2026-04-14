@@ -159,7 +159,10 @@ export async function getActiveFields(filters?: {
   return attachPricingWindows(supabase, rows);
 }
 
-export async function getAllFieldsByOwner(ownerId: string): Promise<Field[]> {
+export async function getAllFieldsByOwner(
+  ownerId: string,
+  options?: { withPricingWindows?: boolean },
+): Promise<Field[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -176,7 +179,9 @@ export async function getAllFieldsByOwner(ownerId: string): Promise<Field[]> {
     fieldRows.map((f) => f.venue_id),
   );
 
-  return attachPricingWindows(supabase, attachVenues(fieldRows, map));
+  const withVenues = attachVenues(fieldRows, map);
+  const withPw = options?.withPricingWindows !== false;
+  return withPw ? attachPricingWindows(supabase, withVenues) : withVenues;
 }
 
 /** Todas las canchas activas de un club (incluye productos solo en ficha del club, ej. F9). */

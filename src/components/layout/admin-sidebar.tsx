@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Building2, Users, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, Users, User, LogOut } from "lucide-react";
 import { signOut } from "@/actions/sign-out";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/locales", label: "Centros y canchas", icon: Building2 },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/perfil", label: "Perfil", icon: User },
 ] as const;
 
 export function AdminSidebar() {

@@ -3,8 +3,7 @@ import { MetricsCards } from "@/components/admin/metrics-cards";
 import { TimeGrid } from "@/components/admin/time-grid";
 import { DashboardVenueFilter } from "@/components/admin/dashboard-venue-filter";
 import {
-  getAdminMetrics,
-  getWeekGridBookings,
+  getAdminDashboardData,
   getMondayOfCurrentWeek,
 } from "@/lib/data/admin";
 import { getAllVenuesByOwner } from "@/lib/data/venues";
@@ -18,10 +17,9 @@ type Props = {
 };
 
 export default async function AdminDashboardPage({ searchParams }: Props) {
-  const profile = await getProfile();
+  const [profile, q] = await Promise.all([getProfile(), searchParams]);
   if (!profile || profile.role !== "ADMIN") redirect("/login");
 
-  const q = await searchParams;
   const venues = await getAllVenuesByOwner(profile.id);
   const rawVenue = q.venue;
   const venueId =
@@ -29,10 +27,11 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
       ? rawVenue
       : null;
 
-  const [metrics, weekBookings] = await Promise.all([
-    getAdminMetrics(profile.id, venueId),
-    getWeekGridBookings(profile.id, getMondayOfCurrentWeek(), venueId),
-  ]);
+  const { metrics, weekBookings } = await getAdminDashboardData(
+    profile.id,
+    venueId,
+    getMondayOfCurrentWeek(),
+  );
 
   return (
     <div className="space-y-6">

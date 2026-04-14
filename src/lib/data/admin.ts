@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { addDaysToInstantISO, getMondayOfWeekBogotaISO } from "@/lib/date-utils";
 import type { BookingStatus } from "@/types/database.types";
 
 export type AdminMetrics = {
@@ -138,11 +139,8 @@ export async function getAdminDashboardData(
     return { metrics: emptyMetrics(), weekBookings: [] };
   }
 
-  const weekStart = new Date(weekStartISO);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7);
-  const startStr = weekStart.toISOString();
-  const endStr = weekEnd.toISOString();
+  const startStr = new Date(weekStartISO).toISOString();
+  const endStr = addDaysToInstantISO(weekStartISO, 7);
 
   const [todayRes, weekRes] = await Promise.all([
     supabase
@@ -255,12 +253,8 @@ export async function getWeekGridBookings(
 ): Promise<GridBooking[]> {
   const supabase = await createClient();
 
-  const weekStart = new Date(weekStartISO);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7);
-
-  const startStr = weekStart.toISOString();
-  const endStr = weekEnd.toISOString();
+  const startStr = new Date(weekStartISO).toISOString();
+  const endStr = addDaysToInstantISO(weekStartISO, 7);
 
   let fieldQuery = supabase.from("fields").select("id").eq("owner_id", ownerId);
   if (venueId) fieldQuery = fieldQuery.eq("venue_id", venueId);
@@ -350,11 +344,5 @@ export async function getAdminClients(
 }
 
 export function getMondayOfCurrentWeek(): string {
-  const now = new Date();
-  const day = now.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + mondayOffset);
-  monday.setHours(0, 0, 0, 0);
-  return monday.toISOString();
+  return getMondayOfWeekBogotaISO(new Date());
 }

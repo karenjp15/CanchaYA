@@ -12,8 +12,43 @@ export function toBogotaDateString(d: Date): string {
 /** Día calendario siguiente a `yyyy-mm-dd` en zona Bogotá. */
 export function nextBogotaDateString(yyyyMmDd: string): string {
   const d = new Date(`${yyyyMmDd}T12:00:00-05:00`);
-  d.setDate(d.getDate() + 1);
+  d.setTime(d.getTime() + 24 * 60 * 60 * 1000);
   return d.toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
+}
+
+const BOGOTA_WEEKDAY_TO_MONDAY_OFFSET: Record<string, number> = {
+  Mon: 0,
+  Tue: 1,
+  Wed: 2,
+  Thu: 3,
+  Fri: 4,
+  Sat: 5,
+  Sun: 6,
+};
+
+/**
+ * Lunes 00:00 America/Bogota de la semana calendario que contiene `ref`
+ * (devuelto como ISO UTC, estable en servidor UTC o en el navegador).
+ */
+export function getMondayOfWeekBogotaISO(ref: Date = new Date()): string {
+  const wdShort = ref.toLocaleDateString("en-US", {
+    timeZone: APP_TIMEZONE,
+    weekday: "short",
+  });
+  const daysBack = BOGOTA_WEEKDAY_TO_MONDAY_OFFSET[wdShort] ?? 0;
+  let ymd = toBogotaDateString(ref);
+  for (let i = 0; i < daysBack; i++) {
+    const d = new Date(`${ymd}T12:00:00-05:00`);
+    d.setTime(d.getTime() - 24 * 60 * 60 * 1000);
+    ymd = toBogotaDateString(d);
+  }
+  return new Date(`${ymd}T00:00:00-05:00`).toISOString();
+}
+
+/** Suma días al instante `iso` (UTC) sin usar TZ local del runtime. */
+export function addDaysToInstantISO(iso: string, days: number): string {
+  const t = new Date(iso).getTime() + days * 24 * 60 * 60 * 1000;
+  return new Date(t).toISOString();
 }
 
 /** Current date in Bogotá */

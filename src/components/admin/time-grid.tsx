@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { GridBooking } from "@/lib/data/admin";
 import { fetchWeekBookings } from "@/actions/admin-dashboard";
+import {
+  addDaysToInstantISO,
+  getMondayOfWeekBogotaISO,
+  nextBogotaDateString,
+  toBogotaDateString,
+} from "@/lib/date-utils";
 import type { BookingStatus } from "@/types/database.types";
 
 const DAY_LABELS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -22,25 +28,27 @@ function formatHour(h: number) {
   return `${h - 12} pm`;
 }
 
-function getWeekDates(offsetWeeks: number) {
-  const now = new Date();
-  const day = now.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + mondayOffset + offsetWeeks * 7);
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
-  });
+function getWeekDates(offsetWeeks: number): Date[] {
+  const baseMondayIso = getMondayOfWeekBogotaISO(new Date());
+  let mondayIso = baseMondayIso;
+  if (offsetWeeks !== 0) {
+    mondayIso = addDaysToInstantISO(baseMondayIso, offsetWeeks * 7);
+    mondayIso = getMondayOfWeekBogotaISO(new Date(mondayIso));
+  }
+  let ymd = toBogotaDateString(new Date(mondayIso));
+  const dates: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    dates.push(new Date(`${ymd}T12:00:00-05:00`));
+    ymd = nextBogotaDateString(ymd);
+  }
+  return dates;
 }
 
 function getMondayISO(offsetWeeks: number): string {
-  const dates = getWeekDates(offsetWeeks);
-  const monday = dates[0];
-  monday.setHours(0, 0, 0, 0);
-  return monday.toISOString();
+  const base = getMondayOfWeekBogotaISO(new Date());
+  if (offsetWeeks === 0) return base;
+  const shifted = addDaysToInstantISO(base, offsetWeeks * 7);
+  return getMondayOfWeekBogotaISO(new Date(shifted));
 }
 
 function statusColor(status: BookingStatus) {
@@ -97,11 +105,8 @@ export function TimeGrid({
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
   const todayIndex = useMemo(() => {
-    const now = new Date();
-    const todayStr = now.toLocaleDateString("en-CA");
-    return weekDates.findIndex(
-      (d) => d.toLocaleDateString("en-CA") === todayStr,
-    );
+    const todayStr = toBogotaDateString(new Date());
+    return weekDates.findIndex((d) => toBogotaDateString(d) === todayStr);
   }, [weekDates]);
 
   function handleClick(b: GridBooking) {

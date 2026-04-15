@@ -21,8 +21,9 @@ import {
   buildProvisionalFlashOffer,
   calculateEffectivePrice,
 } from "@/lib/utils/pricing";
+import { isBogotaFlashOfferWindowEnded } from "@/lib/date-utils";
 import { Zap } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
 
 const FLASH_SLIDER_MIN = 5;
@@ -54,8 +55,29 @@ export function OpportunityCard({
   const period = opportunity.periodLabel.toLowerCase();
   const [open, setOpen] = useState(false);
   const [discount, setDiscount] = useState(FLASH_DEFAULT);
-  const [offerActive, setOfferActive] = useState(initialHasActiveOffer);
+  /** Tras publicar en esta sesión, hasta que venza la franja o recargues. */
+  const [optimisticLaunched, setOptimisticLaunched] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const offerPeriodEnded = isBogotaFlashOfferWindowEnded(
+    opportunity.offerDateYmd,
+    opportunity.rangeEndExclusive,
+    now,
+  );
+
+  useEffect(() => {
+    if (offerPeriodEnded) setOptimisticLaunched(false);
+  }, [offerPeriodEnded]);
+
+  const offerCurrentlyLive =
+    !offerPeriodEnded &&
+    (initialHasActiveOffer || optimisticLaunched);
 
   const previewTime = `${String(opportunity.rangeStartHour).padStart(2, "0")}:00`;
   const provisional = buildProvisionalFlashOffer(
@@ -87,7 +109,7 @@ export function OpportunityCard({
         return;
       }
       toast.success("Oferta relámpago publicada correctamente");
-      setOfferActive(true);
+      setOptimisticLaunched(true);
       setOpen(false);
     });
   }
@@ -116,20 +138,24 @@ export function OpportunityCard({
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 pt-0 sm:flex-row sm:items-center sm:justify-between">
-          {offerActive ? (
-            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+          {offerCurrentlyLive ? (
+            <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
               Oferta activa
-            </span>
+              <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                Podrás lanzar otra cuando termine la franja ({opportunity.displayRange}, Bogotá).
+              </span>
+            </p>
           ) : null}
-          <Button
-            type="button"
-            size="sm"
-            disabled={offerActive}
-            onClick={() => setOpen(true)}
-            className="w-full border-amber-500/50 bg-amber-500/15 text-amber-900 hover:bg-amber-500/25 dark:text-amber-100 sm:w-auto"
-          >
-            Lanzar Oferta
-          </Button>
+          {!offerCurrentlyLive ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setOpen(true)}
+              className="w-full border-amber-500/50 bg-amber-500/15 text-amber-900 hover:bg-amber-500/25 dark:text-amber-100 sm:w-auto"
+            >
+              Lanzar Oferta
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
 

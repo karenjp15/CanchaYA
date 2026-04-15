@@ -9,6 +9,23 @@ export function toBogotaDateString(d: Date): string {
   return d.toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
 }
 
+/**
+ * true cuando `ref` ya es igual o posterior al fin de la franja de oferta
+ * en el día `offerDateYmd` (Bogotá). `rangeEndExclusiveHour` es hora entera
+ * exclusiva, alineada con `LowDemandOpportunity.rangeEndExclusive`.
+ */
+export function isBogotaFlashOfferWindowEnded(
+  offerDateYmd: string,
+  rangeEndExclusiveHour: number,
+  ref: Date = new Date(),
+): boolean {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const end = new Date(
+    `${offerDateYmd}T${pad(rangeEndExclusiveHour)}:00:00-05:00`,
+  );
+  return ref.getTime() >= end.getTime();
+}
+
 /** Día calendario siguiente a `yyyy-mm-dd` en zona Bogotá. */
 export function nextBogotaDateString(yyyyMmDd: string): string {
   const d = new Date(`${yyyyMmDd}T12:00:00-05:00`);

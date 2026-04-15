@@ -25,17 +25,17 @@ export function AppLeftNav() {
       aria-label="Navegación de la aplicación"
     >
       {/* Marca: solo escritorio, armonizada con el rail */}
-      <div className="hidden shrink-0 border-b border-border/70 bg-gradient-to-br from-primary/[0.06] via-transparent to-warning/[0.06] px-4 py-5 md:block">
+      <div className="hidden shrink-0 border-b border-border/70 bg-gradient-to-br from-primary/[0.06] via-transparent to-warning/[0.06] px-4 py-4 md:block">
         <Link
           href="/explorar?sport=FUTBOL"
-          className="group flex items-center gap-3 rounded-xl p-2 -m-2 outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring"
+          className="group flex items-center gap-2.5 rounded-xl p-2 -m-2 outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring"
         >
           <BrandMark
             size="md"
-            className="rounded-xl ring-1 ring-border/40 transition-transform group-hover:scale-[1.02]"
+            className="rounded-lg ring-1 ring-border/40 transition-transform group-hover:scale-[1.02]"
           />
           <div className="min-w-0 leading-tight">
-            <span className="block font-semibold tracking-tight text-foreground">
+            <span className="block text-base font-semibold tracking-tight text-foreground">
               CanchaYa
             </span>
             <span className="text-xs font-medium text-muted-foreground">

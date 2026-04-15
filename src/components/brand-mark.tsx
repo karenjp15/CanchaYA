@@ -8,12 +8,12 @@ type BrandMarkProps = {
   className?: string;
 } & ComponentPropsWithoutRef<"span">;
 
-const dim = { sm: 32, md: 40, lg: 56 } as const;
+const dim = { sm: 28, md: 36, lg: 44 } as const;
 
 const boxClass = {
-  sm: "size-8",
-  md: "size-10",
-  lg: "size-14",
+  sm: "size-7",
+  md: "size-9",
+  lg: "size-11",
 } as const;
 
 /**

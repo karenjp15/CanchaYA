@@ -25,15 +25,19 @@ export function AdminSidebar() {
         "md:h-full md:w-56 md:border-b-0 md:border-r",
       )}
     >
-      <div className="flex min-h-12 items-center gap-3 border-b border-border px-3 py-2 sm:min-h-14 sm:px-4">
+      <div className="flex min-h-12 items-center gap-2.5 border-b border-border px-3 py-2 sm:min-h-14 sm:px-4 sm:py-2.5">
         <BrandMark
           size="lg"
-          className="rounded-xl ring-1 ring-border/50"
+          className="rounded-lg ring-1 ring-border/50"
           aria-hidden
         />
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-semibold">CanchaYa</p>
-          <p className="text-[10px] text-muted-foreground">Admin Panel</p>
+          <p className="truncate text-base font-semibold tracking-tight sm:text-lg">
+            CanchaYa
+          </p>
+          <p className="text-[11px] font-medium text-muted-foreground sm:text-xs">
+            Admin Panel
+          </p>
         </div>
       </div>
 

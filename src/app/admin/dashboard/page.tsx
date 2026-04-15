@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 import { DashboardOpportunitySlot } from "@/components/admin/dashboard-opportunity-slot";
 import { OpportunityCardSkeleton } from "@/components/admin/opportunity-card";
-import { MetricsCards } from "@/components/admin/metrics-cards";
-import { TimeGrid } from "@/components/admin/time-grid";
+import { AdminDashboardMain } from "@/components/admin/admin-dashboard-main";
+import { AdminDashboardMainSkeleton } from "@/components/admin/admin-dashboard-main-skeleton";
 import { DashboardVenueFilter } from "@/components/admin/dashboard-venue-filter";
-import {
-  getAdminDashboardData,
-  getMondayOfCurrentWeek,
-} from "@/lib/data/admin";
+import { getMondayOfCurrentWeek } from "@/lib/data/admin";
 import { getAllVenuesByOwner } from "@/lib/data/venues";
 import { getProfile } from "@/lib/auth/profile";
 import { redirect } from "next/navigation";
@@ -29,11 +26,7 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
       ? rawVenue
       : null;
 
-  const { metrics, weekBookings } = await getAdminDashboardData(
-    profile.id,
-    venueId,
-    getMondayOfCurrentWeek(),
-  );
+  const weekStartISO = getMondayOfCurrentWeek();
 
   return (
     <div className="space-y-6">
@@ -44,25 +37,24 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
             Resumen diario y ocupación semanal
           </p>
         </div>
-        <Suspense fallback={null}>
-          <DashboardVenueFilter venues={venues} selectedVenueId={venueId} />
-        </Suspense>
+        <DashboardVenueFilter venues={venues} selectedVenueId={venueId} />
       </div>
 
+      {/*
+        Streaming: estos dos bloques disparan datos en paralelo (no esperar uno por el otro).
+        Antes todo se await en la página y Suspense no servía para nada.
+      */}
       <Suspense fallback={<OpportunityCardSkeleton />}>
         <DashboardOpportunitySlot ownerId={profile.id} venueId={venueId} />
       </Suspense>
 
-      <MetricsCards metrics={metrics} />
-
-      <div>
-        <h2 className="mb-3 text-lg font-semibold">Calendario semanal</h2>
-        <TimeGrid
+      <Suspense fallback={<AdminDashboardMainSkeleton />}>
+        <AdminDashboardMain
           ownerId={profile.id}
           venueId={venueId}
-          initialBookings={weekBookings}
+          weekStartISO={weekStartISO}
         />
-      </div>
+      </Suspense>
     </div>
   );
 }

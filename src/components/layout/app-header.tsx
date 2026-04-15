@@ -63,7 +63,7 @@ export function AppHeader({ user }: AppHeaderProps) {
               <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary">
                 {initials ?? "?"}
               </span>
-              <span className="hidden max-w-[160px] truncate text-sm font-medium text-foreground lg:inline">
+              <span className="hidden max-w-[180px] truncate text-sm font-medium text-foreground md:inline">
                 {user.name ?? user.email}
               </span>
               <form action={signOut}>

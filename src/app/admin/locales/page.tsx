@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Car, Wine } from "lucide-react";
 import { FOOTBALL_SURFACE_LABELS, SPORT_LABELS } from "@/lib/constants";
 import { fieldSportDetailLine } from "@/lib/field-display";
-import Link from "next/link";
 import { FieldActiveToggle } from "@/components/admin/field-active-toggle";
 
 export const metadata = { title: "Centros y canchas" };
@@ -79,7 +78,7 @@ export default async function AdminLocalesPage() {
                   mode="create"
                   venues={allVenues}
                   fixedVenueId={v.id}
-                  createButtonLabel="Añadir cancha aquí"
+                  createButtonLabel="Añadir cancha"
                   createButtonVariant="outline"
                 />
                 <VenueFormDialog mode="edit" venue={v} />
@@ -92,7 +91,7 @@ export default async function AdminLocalesPage() {
               </p>
               {fields.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Aún no hay canchas. Usa &quot;Añadir cancha aquí&quot; para
+                  Aún no hay canchas. Usa &quot;Añadir cancha&quot; para
                   registrar la primera.
                 </p>
               ) : (
@@ -125,12 +124,6 @@ export default async function AdminLocalesPage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
-                        <Link
-                          href={`/canchas/${f.id}?sport=${f.sport}`}
-                          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-                        >
-                          Ver público
-                        </Link>
                         <FieldFormDialog
                           mode="edit"
                           field={f}

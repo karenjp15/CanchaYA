@@ -45,7 +45,7 @@ export function VenueFormDialog({ mode, venue }: Props) {
         render={
           mode === "create" ? (
             <Button className="gap-1.5">
-              <Plus className="size-4" /> Nuevo establecimiento
+              <Plus className="size-4" /> Nuevo
             </Button>
           ) : (
             <Button variant="ghost" size="icon-sm">

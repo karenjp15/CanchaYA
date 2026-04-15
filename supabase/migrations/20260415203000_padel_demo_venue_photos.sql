@@ -1,5 +1,5 @@
--- Las URLs de images.unsplash.com del demo devolvían 404/403 al abrir el enlace.
--- Sustituir por rutas servidas desde public/fields (misma app).
+-- Fotos propias para los 4 clubes demo de pádel (assets en public/fields).
+-- Idempotente: actualiza por nombre de club + pista.
 
 update public.fields f
 set image_url = '/fields/demo-padel-oro-norte.png'
@@ -28,9 +28,3 @@ from public.venues v
 where f.venue_id = v.id
   and v.name = 'VÉRTICE SUBA PADEL HOUSE'
   and f.name = 'Pista Premium Indoor';
-
--- Cualquier otra cancha que aún apunte a Unsplash
-update public.fields
-set image_url = '/fields/field-1.jpg'
-where image_url is not null
-  and image_url ilike '%unsplash.com%';

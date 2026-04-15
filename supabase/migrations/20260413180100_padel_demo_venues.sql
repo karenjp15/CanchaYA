@@ -46,7 +46,7 @@ begin
       aid, vid, 'Pista Central Cristal', 'PADEL'::public.sport_type,
       'GLASS'::public.padel_wall_material, 'INDOOR'::public.padel_court_location,
       90, 80000,
-      '/fields/field-6.jpg',
+      '/fields/demo-padel-oro-norte.png',
       true, true
     )
     returning id into fid;
@@ -84,7 +84,7 @@ begin
       aid, vid, 'Pista Acristalada Norte', 'PADEL'::public.sport_type,
       'GLASS'::public.padel_wall_material, 'OUTDOOR'::public.padel_court_location,
       90, 110000,
-      '/fields/field-3.jpg',
+      '/fields/demo-padel-arena-93.png',
       true, true
     )
     returning id into fid;
@@ -122,7 +122,7 @@ begin
       aid, vid, 'Pista Doble Altura', 'PADEL'::public.sport_type,
       'GLASS'::public.padel_wall_material, 'INDOOR'::public.padel_court_location,
       90, 80000,
-      '/fields/field-2.jpg',
+      '/fields/demo-padel-zona-g.png',
       true, true
     )
     returning id into fid;
@@ -160,7 +160,7 @@ begin
       aid, vid, 'Pista Premium Indoor', 'PADEL'::public.sport_type,
       'WALL'::public.padel_wall_material, 'INDOOR'::public.padel_court_location,
       90, 110000,
-      '/fields/field-1.jpg',
+      '/fields/demo-padel-vertice-suba.png',
       true, true
     )
     returning id into fid;
@@ -173,25 +173,25 @@ begin
 
   -- Sincronizar fotos locales (evita 404/403 de hotlinks Unsplash si el club ya existía).
   update public.fields f
-  set image_url = '/fields/field-6.jpg'
+  set image_url = '/fields/demo-padel-oro-norte.png'
   from public.venues v
   where f.venue_id = v.id and v.owner_id = aid
     and v.name = 'ORO NORTE PÁDEL CLUB' and f.name = 'Pista Central Cristal';
 
   update public.fields f
-  set image_url = '/fields/field-3.jpg'
+  set image_url = '/fields/demo-padel-arena-93.png'
   from public.venues v
   where f.venue_id = v.id and v.owner_id = aid
     and v.name = 'ARENA 93 ROOFTOP PADEL' and f.name = 'Pista Acristalada Norte';
 
   update public.fields f
-  set image_url = '/fields/field-2.jpg'
+  set image_url = '/fields/demo-padel-zona-g.png'
   from public.venues v
   where f.venue_id = v.id and v.owner_id = aid
     and v.name = 'CLUB ZONA G CRISTAL' and f.name = 'Pista Doble Altura';
 
   update public.fields f
-  set image_url = '/fields/field-1.jpg'
+  set image_url = '/fields/demo-padel-vertice-suba.png'
   from public.venues v
   where f.venue_id = v.id and v.owner_id = aid
     and v.name = 'VÉRTICE SUBA PADEL HOUSE' and f.name = 'Pista Premium Indoor';

@@ -6,6 +6,10 @@ import type { Venue } from "@/lib/data/venues";
 type Props = {
   venues: Venue[];
   selectedVenueId: string | null;
+  /** Ruta sin query, ej. `/admin/dashboard` o `/admin/clientes`. */
+  basePath: string;
+  label: string;
+  htmlId: string;
 };
 
 function venueOptionLabel(v: Venue): string {
@@ -15,7 +19,13 @@ function venueOptionLabel(v: Venue): string {
   return `${v.name} (${short})`;
 }
 
-export function DashboardVenueFilter({ venues, selectedVenueId }: Props) {
+export function AdminVenueFilter({
+  venues,
+  selectedVenueId,
+  basePath,
+  label,
+  htmlId,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,18 +34,21 @@ export function DashboardVenueFilter({ venues, selectedVenueId }: Props) {
     if (venueId) p.set("venue", venueId);
     else p.delete("venue");
     const q = p.toString();
-    router.push(q ? `/admin/dashboard?${q}` : "/admin/dashboard");
+    router.push(q ? `${basePath}?${q}` : basePath);
   }
 
   if (venues.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-      <label htmlFor="dashboard-venue" className="text-sm font-medium text-muted-foreground shrink-0">
-        Establecimiento
+      <label
+        htmlFor={htmlId}
+        className="shrink-0 text-sm font-medium text-muted-foreground"
+      >
+        {label}
       </label>
       <select
-        id="dashboard-venue"
+        id={htmlId}
         className="h-9 max-w-md rounded-lg border border-input bg-background px-3 text-sm"
         value={selectedVenueId ?? ""}
         onChange={(e) => onChange(e.target.value)}

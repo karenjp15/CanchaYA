@@ -19,8 +19,17 @@ type ProfileFormLazyProps = {
     phone: string | null;
     address: string | null;
   };
+  paymentMethodsCardTitle?: string;
 };
 
-export function ProfileFormLazy({ profile }: ProfileFormLazyProps) {
-  return <ProfileForm profile={profile} />;
+export function ProfileFormLazy({
+  profile,
+  paymentMethodsCardTitle,
+}: ProfileFormLazyProps) {
+  return (
+    <ProfileForm
+      profile={profile}
+      paymentMethodsCardTitle={paymentMethodsCardTitle}
+    />
+  );
 }

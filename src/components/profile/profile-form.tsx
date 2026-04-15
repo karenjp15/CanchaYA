@@ -30,11 +30,16 @@ type ProfileFormProps = {
     phone: string | null;
     address: string | null;
   };
+  /** Panel admin: p. ej. cuentas de cobro; jugador: medios de pago. */
+  paymentMethodsCardTitle?: string;
 };
 
 const initial: ProfileActionState = {};
 
-export function ProfileForm({ profile }: ProfileFormProps) {
+export function ProfileForm({
+  profile,
+  paymentMethodsCardTitle = "Medios de Pago",
+}: ProfileFormProps) {
   const [state, formAction, pending] = useActionState(updateProfile, initial);
   const initials = (profile.full_name ?? "U")
     .split(" ")
@@ -122,7 +127,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Medios de Pago</CardTitle>
+              <CardTitle className="text-sm">{paymentMethodsCardTitle}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center justify-between">

@@ -75,12 +75,6 @@ export default function HomePage() {
           </Link>
           <nav className="flex items-center gap-3 text-sm sm:gap-4">
             <Link
-              href="/explorar?sport=FUTBOL"
-              className="font-medium text-foreground transition-colors hover:text-primary"
-            >
-              Ver app
-            </Link>
-            <Link
               href="/login"
               className="text-muted-foreground transition-colors hover:text-foreground"
             >

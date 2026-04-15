@@ -15,6 +15,7 @@ export default async function AdminPerfilPage() {
         dirección. Los cambios aplican a tu sesión en todo CanchaYa.
       </p>
       <ProfileFormLazy
+        paymentMethodsCardTitle="Cuentas"
         profile={{
           full_name: profile.full_name,
           email: profile.email,

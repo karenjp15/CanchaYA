@@ -1,9 +1,12 @@
 import { Suspense } from "react";
 import { DynamicFilterBar } from "@/components/fields/dynamic-filter-bar";
-import { FieldCard } from "@/components/fields/field-card";
+import { VenueExploreCard } from "@/components/fields/venue-explore-card";
 import { FieldsMapLoader } from "@/components/fields/fields-map-loader";
 import { getActiveFields } from "@/lib/data/fields";
-import { groupFieldsByVenue } from "@/lib/data/field-grouping";
+import {
+  groupFieldsByVenue,
+  pickMapRepresentativeFieldPerVenue,
+} from "@/lib/data/field-grouping";
 import { attachAvailabilityToday } from "@/lib/data/field-availability";
 import { cn } from "@/lib/utils";
 import type { FootballCapacity, SportType } from "@/types/database.types";
@@ -56,6 +59,13 @@ export default async function ExplorarPage({ searchParams }: Props) {
 
   const venueCount = byVenue.length;
   const fieldCount = fieldsWithAvail.length;
+  const mapFields = pickMapRepresentativeFieldPerVenue(fieldsWithAvail);
+  const productPref =
+    sport === "FUTBOL" &&
+    capacity &&
+    ["F5", "F7", "F9", "F11"].includes(capacity)
+      ? capacity
+      : null;
   const citySlug = q.city?.trim() ?? "";
   const cityLabel = citySlug
     ? COLOMBIA_EXPLORAR_CITIES.find((c) => c.slug === citySlug)?.label
@@ -86,14 +96,11 @@ export default async function ExplorarPage({ searchParams }: Props) {
                 <>
                   Mostrando{" "}
                   <span className="font-semibold text-foreground">
-                    {fieldCount}{" "}
-                    {fieldCount === 1 ? "cancha" : "canchas"}
-                  </span>{" "}
-                  en{" "}
-                  <span className="font-semibold text-foreground">
                     {venueCount}{" "}
-                    {venueCount === 1 ? "club" : "clubes"}
+                    {venueCount === 1 ? "centro" : "centros"}
                   </span>{" "}
+                  ({fieldCount}{" "}
+                  {fieldCount === 1 ? "cancha" : "canchas"}){" "}
                   · filtro:{" "}
                   <span className="font-medium text-foreground">
                     {SPORT_LABELS[sport]}
@@ -134,11 +141,15 @@ export default async function ExplorarPage({ searchParams }: Props) {
                   "grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2",
                 )}
               >
-                {byVenue.flatMap(({ fields: venueFields }) =>
-                  venueFields.map((f) => (
-                    <FieldCard key={f.id} field={f} sport={sport} />
-                  )),
-                )}
+                {byVenue.map(({ venueId, fields: venueFields }) => (
+                  <VenueExploreCard
+                    key={venueId}
+                    venueId={venueId}
+                    fields={venueFields}
+                    sport={sport}
+                    productPref={productPref}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -161,7 +172,12 @@ export default async function ExplorarPage({ searchParams }: Props) {
             )}
           >
             <div className="absolute inset-0 min-h-0">
-              <FieldsMapLoader fields={fieldsWithAvail} sport={sport} />
+              <FieldsMapLoader
+                fields={mapFields}
+                sport={sport}
+                mapLinksToVenueReservar
+                reservarProductParam={productPref}
+              />
             </div>
           </div>
         </div>

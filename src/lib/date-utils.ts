@@ -107,6 +107,31 @@ function rangesOverlap(
   return aStart < bEnd && bStart < aEnd;
 }
 
+/**
+ * Un slot está libre para el “producto club” si al menos una cancha candidata
+ * no tiene solape con ninguna de sus reservas (misma lógica que una sola cancha por lista).
+ */
+export function mergeSlotAvailabilityForAnyField(
+  baseSlots: { time: string; label: string; available: boolean }[],
+  perFieldBooked: { start: string; end: string }[][],
+  slotDurationMinutes: number,
+): { time: string; label: string; available: boolean }[] {
+  if (perFieldBooked.length === 0) return baseSlots;
+  const bookedRanges = perFieldBooked.map((list) =>
+    list.map((b) => ({ start: new Date(b.start), end: new Date(b.end) })),
+  );
+  return baseSlots.map((slot) => {
+    if (!slot.available) return slot;
+    const start = new Date(slot.time);
+    const end = new Date(start.getTime() + slotDurationMinutes * 60_000);
+    const anyFree = bookedRanges.some(
+      (ranges) =>
+        !ranges.some((br) => rangesOverlap(start, end, br.start, br.end)),
+    );
+    return { ...slot, available: anyFree };
+  });
+}
+
 function formatSlotRangeLabel(start: Date, end: Date): string {
   const opts: Intl.DateTimeFormatOptions = {
     hour: "numeric",

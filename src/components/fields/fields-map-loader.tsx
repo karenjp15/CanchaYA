@@ -19,13 +19,23 @@ const FieldsMap = dynamic(
 export function FieldsMapLoader({
   fields,
   sport,
+  mapLinksToVenueReservar,
+  reservarProductParam,
 }: {
   fields: Field[];
   sport: SportType;
+  /** En explorar: popup enlaza a `/venues/.../reservar` (serializable; no pasar funciones desde RSC). */
+  mapLinksToVenueReservar?: boolean;
+  reservarProductParam?: string | null;
 }) {
   return (
     <div className="h-full w-full min-h-0">
-      <FieldsMap fields={fields} sport={sport} />
+      <FieldsMap
+        fields={fields}
+        sport={sport}
+        mapLinksToVenueReservar={mapLinksToVenueReservar}
+        reservarProductParam={reservarProductParam ?? null}
+      />
     </div>
   );
 }

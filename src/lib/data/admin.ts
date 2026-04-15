@@ -337,13 +337,13 @@ type AdminClientAgg = {
 
 export async function getAdminClients(
   ownerId: string,
+  venueId?: string | null,
 ): Promise<AdminClient[]> {
   const supabase = await createClient();
 
-  const fieldIds = await supabase
-    .from("fields")
-    .select("id")
-    .eq("owner_id", ownerId);
+  let fq = supabase.from("fields").select("id").eq("owner_id", ownerId);
+  if (venueId) fq = fq.eq("venue_id", venueId);
+  const fieldIds = await fq;
 
   const ids = (fieldIds.data ?? []).map((f) => f.id);
   if (ids.length === 0) return [];

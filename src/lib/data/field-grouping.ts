@@ -1,4 +1,8 @@
-import type { Field } from "@/lib/data/field-model";
+import {
+  fieldLatitude,
+  fieldLongitude,
+  type Field,
+} from "@/lib/data/field-model";
 
 /** Agrupa canchas por establecimiento. Orden: nombre del local, luego cancha. */
 export function groupFieldsByVenue<T extends Field>(fields: T[]): {
@@ -26,4 +30,24 @@ export function groupFieldsByVenue<T extends Field>(fields: T[]): {
         sensitivity: "base",
       }),
     );
+}
+
+/** Una cancha con coordenadas por club (para un solo marcador en el mapa). */
+export function pickMapRepresentativeFieldPerVenue<T extends Field>(
+  fields: T[],
+): T[] {
+  const byVenue = new Map<string, T[]>();
+  for (const f of fields) {
+    const list = byVenue.get(f.venue_id) ?? [];
+    list.push(f);
+    byVenue.set(f.venue_id, list);
+  }
+  const out: T[] = [];
+  for (const list of byVenue.values()) {
+    const withCoords = list.find(
+      (f) => fieldLatitude(f) != null && fieldLongitude(f) != null,
+    );
+    if (withCoords) out.push(withCoords);
+  }
+  return out;
 }

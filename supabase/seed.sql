@@ -146,10 +146,10 @@ BEGIN
 
     INSERT INTO public.bookings (user_id, field_id, start_time, end_time, total_price, status, payment_method, billing_first_name, billing_last_name, billing_email, billing_phone, id_document_type, id_number)
     VALUES
-      (v_player_id, v_field1, now() - interval '3 days' + interval '16 hours', now() - interval '3 days' + interval '17 hours', 210000, 'PAID', 'PSE', 'Kjulieth', 'P', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890'),
-      (v_player_id, v_field3, now() + interval '2 days' + interval '20 hours', now() + interval '2 days' + interval '21 hours', 150000, 'PAID', 'VISA', 'Kjulieth', 'P', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890'),
-      (v_player_id, v_field4, now() + interval '5 days' + interval '14 hours', now() + interval '5 days' + interval '15 hours', 250000, 'PENDING', NULL, 'Kjulieth', 'P', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890'),
-      (v_player_id, v_field2, now() - interval '7 days' + interval '10 hours', now() - interval '7 days' + interval '11 hours', 90000, 'CANCELLED', NULL, 'Kjulieth', 'P', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890');
+      (v_player_id, v_field1, now() - interval '3 days' + interval '16 hours', now() - interval '3 days' + interval '17 hours', 210000, 'PAID', 'PSE', 'Karen', 'Piñeros', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890'),
+      (v_player_id, v_field3, now() + interval '2 days' + interval '20 hours', now() + interval '2 days' + interval '21 hours', 150000, 'PAID', 'VISA', 'Karen', 'Piñeros', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890'),
+      (v_player_id, v_field4, now() + interval '5 days' + interval '14 hours', now() + interval '5 days' + interval '15 hours', 250000, 'PENDING', NULL, 'Karen', 'Piñeros', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890'),
+      (v_player_id, v_field2, now() - interval '7 days' + interval '10 hours', now() - interval '7 days' + interval '11 hours', 90000, 'CANCELLED', NULL, 'Karen', 'Piñeros', 'kjuliethp@test.com', '3001234567', 'CC', '1234567890');
 
     RAISE NOTICE 'Bookings de prueba insertados correctamente.';
   ELSE

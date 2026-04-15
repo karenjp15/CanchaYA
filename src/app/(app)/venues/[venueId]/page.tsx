@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FieldCard } from "@/components/fields/field-card";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { attachAvailabilityToday } from "@/lib/data/field-availability";
 import { getFieldsForVenue } from "@/lib/data/fields";
 import { getVenueById } from "@/lib/data/venues";
@@ -61,7 +62,17 @@ export default async function VenueDetailPage({ params, searchParams }: Props) {
       </nav>
 
       <header className="mb-8 space-y-3 border-b border-border pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{venue.name}</h1>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className="text-2xl font-semibold tracking-tight">{venue.name}</h1>
+          {fieldsSport.length > 0 ? (
+            <Link
+              href={`/venues/${venueId}/reservar?sport=${sport}`}
+              className={buttonVariants({ className: "shrink-0" })}
+            >
+              Reservar horario
+            </Link>
+          ) : null}
+        </div>
         {lines.length > 0 ? (
           <div className="text-sm text-muted-foreground whitespace-pre-line">
             {lines.join("\n")}

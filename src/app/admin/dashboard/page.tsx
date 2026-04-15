@@ -3,7 +3,7 @@ import { DashboardOpportunitySlot } from "@/components/admin/dashboard-opportuni
 import { OpportunityCardSkeleton } from "@/components/admin/opportunity-card";
 import { AdminDashboardMain } from "@/components/admin/admin-dashboard-main";
 import { AdminDashboardMainSkeleton } from "@/components/admin/admin-dashboard-main-skeleton";
-import { DashboardVenueFilter } from "@/components/admin/dashboard-venue-filter";
+import { AdminVenueFilter } from "@/components/admin/admin-venue-filter";
 import { getMondayOfCurrentWeek } from "@/lib/data/admin";
 import { getAllVenuesByOwner } from "@/lib/data/venues";
 import { getProfile } from "@/lib/auth/profile";
@@ -37,7 +37,13 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
             Resumen diario y ocupación semanal
           </p>
         </div>
-        <DashboardVenueFilter venues={venues} selectedVenueId={venueId} />
+        <AdminVenueFilter
+          venues={venues}
+          selectedVenueId={venueId}
+          basePath="/admin/dashboard"
+          label="Establecimiento"
+          htmlId="admin-dashboard-venue"
+        />
       </div>
 
       {/*

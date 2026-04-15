@@ -46,9 +46,13 @@ type MapField = Field | FieldWithAvailability;
 export function FieldsMap({
   fields,
   sport,
+  mapLinksToVenueReservar,
+  reservarProductParam,
 }: {
   fields: MapField[];
   sport: SportType;
+  mapLinksToVenueReservar?: boolean;
+  reservarProductParam?: string | null;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -65,10 +69,27 @@ export function FieldsMap({
     );
   }
 
-  return <MapInner fields={fields} sport={sport} />;
+  return (
+    <MapInner
+      fields={fields}
+      sport={sport}
+      mapLinksToVenueReservar={mapLinksToVenueReservar}
+      reservarProductParam={reservarProductParam ?? null}
+    />
+  );
 }
 
-function MapInner({ fields, sport }: { fields: MapField[]; sport: SportType }) {
+function MapInner({
+  fields,
+  sport,
+  mapLinksToVenueReservar,
+  reservarProductParam,
+}: {
+  fields: MapField[];
+  sport: SportType;
+  mapLinksToVenueReservar?: boolean;
+  reservarProductParam: string | null;
+}) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const rl = require("react-leaflet") as typeof import("react-leaflet");
   const { MapContainer, TileLayer, Marker, Popup } = rl;
@@ -100,6 +121,13 @@ function MapInner({ fields, sport }: { fields: MapField[]; sport: SportType }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {validFields.map((field) => {
+          const bookingHref = mapLinksToVenueReservar
+            ? `/venues/${field.venue_id}/reservar?sport=${sport}${
+                reservarProductParam
+                  ? `&product=${encodeURIComponent(reservarProductParam)}`
+                  : ""
+              }`
+            : `/canchas/${field.id}?sport=${sport}`;
           const venue = fieldVenueName(field);
           const padelRange =
             field.sport === "PADEL" && (field.pricing_windows?.length ?? 0) > 0
@@ -158,10 +186,10 @@ function MapInner({ fields, sport }: { fields: MapField[]; sport: SportType }) {
                   <p className="text-[11px] text-muted-foreground">{padelHint}</p>
                 ) : null}
                 <Link
-                  href={`/canchas/${field.id}?sport=${sport}`}
+                  href={bookingHref}
                   className="inline-block text-xs font-medium text-primary underline underline-offset-2"
                 >
-                  Ver detalle
+                  {mapLinksToVenueReservar ? "Reservar" : "Ver detalle"}
                 </Link>
               </div>
             </Popup>

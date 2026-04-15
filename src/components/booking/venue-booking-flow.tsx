@@ -279,8 +279,7 @@ export function VenueBookingFlow({
           Tipo de cancha
         </p>
         <p className="mb-3 text-xs text-muted-foreground">
-          Elige el formato; el sistema asigna una cancha libre de ese tipo (no
-          muestra número de pista).
+          Elige el formato; el sistema asigna una cancha libre de ese tipo.
         </p>
         <div className="flex flex-wrap gap-2">
           {productOptions.map((opt) => (

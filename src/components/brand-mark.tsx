@@ -4,11 +4,17 @@ import { cn } from "@/lib/utils";
 
 type BrandMarkProps = {
   /** Tamaño del contenedor (isotipo escalado con object-contain). */
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   className?: string;
 } & ComponentPropsWithoutRef<"span">;
 
-const dim = { sm: 32, md: 40 } as const;
+const dim = { sm: 32, md: 40, lg: 56 } as const;
+
+const boxClass = {
+  sm: "size-8",
+  md: "size-10",
+  lg: "size-14",
+} as const;
 
 /**
  * Logo CanchaYa: el PNG puede traer fondo blanco; en tema claro `mix-blend-multiply`
@@ -25,7 +31,7 @@ export function BrandMark({
     <span
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg",
-        size === "sm" ? "size-8" : "size-10",
+        boxClass[size],
         /* Mismo tono base que el navbar / rail para que el blanco del asset no “flote”. */
         "bg-background dark:bg-card",
         className,

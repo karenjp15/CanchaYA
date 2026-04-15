@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, Building2, Users, User, LogOut } from "lucide-react";
 import { signOut } from "@/actions/sign-out";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand-mark";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,10 +25,12 @@ export function AdminSidebar() {
         "md:h-full md:w-56 md:border-b-0 md:border-r",
       )}
     >
-      <div className="flex h-12 items-center gap-2 border-b border-border px-3 sm:h-14 sm:px-4">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-          C
-        </span>
+      <div className="flex min-h-12 items-center gap-3 border-b border-border px-3 py-2 sm:min-h-14 sm:px-4">
+        <BrandMark
+          size="lg"
+          className="rounded-xl ring-1 ring-border/50"
+          aria-hidden
+        />
         <div className="min-w-0 leading-tight">
           <p className="truncate text-sm font-semibold">CanchaYa</p>
           <p className="text-[10px] text-muted-foreground">Admin Panel</p>

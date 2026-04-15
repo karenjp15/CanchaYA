@@ -257,6 +257,65 @@ export async function updateField(
   return { message: "Cancha actualizada" };
 }
 
+export async function deleteField(
+  _prev: FieldActionState,
+  formData: FormData,
+): Promise<FieldActionState> {
+  const fieldId = formData.get("fieldId") as string;
+  if (!fieldId) return { error: "ID de cancha requerido" };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado" };
+
+  const { data: fieldRow, error: fetchErr } = await supabase
+    .from("fields")
+    .select("id, venue_id")
+    .eq("id", fieldId)
+    .maybeSingle();
+
+  if (fetchErr) return { error: fetchErr.message };
+  if (!fieldRow) {
+    return { error: "Cancha no encontrada o sin permiso para eliminarla" };
+  }
+
+  const { count, error: countErr } = await supabase
+    .from("bookings")
+    .select("*", { count: "exact", head: true })
+    .eq("field_id", fieldId);
+
+  if (countErr) return { error: countErr.message };
+  if (count != null && count > 0) {
+    return {
+      error:
+        "No se puede eliminar: hay reservas registradas para esta cancha (incluye canceladas). Puedes desactivarla en su lugar.",
+    };
+  }
+
+  const { error } = await supabase.from("fields").delete().eq("id", fieldId);
+
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        error:
+          "No se puede eliminar: aún hay datos vinculados. Prueba desactivar la cancha.",
+      };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/locales");
+  revalidatePath("/admin/canchas");
+  revalidatePath("/explorar");
+  revalidatePath(`/canchas/${fieldId}`);
+  if (fieldRow.venue_id) {
+    revalidatePath(`/venues/${fieldRow.venue_id}`);
+  }
+  return { message: "Cancha eliminada" };
+}
+
 export async function toggleFieldActive(
   fieldId: string,
   isActive: boolean,

@@ -2,7 +2,12 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { createField, updateField, type FieldActionState } from "@/actions/admin-fields";
+import {
+  createField,
+  deleteField,
+  updateField,
+  type FieldActionState,
+} from "@/actions/admin-fields";
 import {
   fetchMarketHourlyPriceHint,
   type MarketHourlyPriceHint,
@@ -63,6 +68,10 @@ export function FieldFormDialog({
 }: Props) {
   const action = mode === "create" ? createField : updateField;
   const [state, formAction, pending] = useActionState(action, initial);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteField,
+    initial,
+  );
   const [open, setOpen] = useState(false);
   const [sport, setSport] = useState<"PADEL" | "FUTBOL">(
     field?.sport ?? "FUTBOL",
@@ -177,6 +186,12 @@ export function FieldFormDialog({
     field?.id,
   ]);
 
+  useEffect(() => {
+    if (deleteState.message === "Cancha eliminada") {
+      setOpen(false);
+    }
+  }, [deleteState.message]);
+
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -227,9 +242,9 @@ export function FieldFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {state.error && (
+        {(state.error || deleteState.error) && (
           <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
-            {state.error}
+            {state.error ?? deleteState.error}
           </p>
         )}
         {state.message && (
@@ -238,7 +253,7 @@ export function FieldFormDialog({
           </p>
         )}
 
-        <form action={formAction} className="space-y-4">
+        <form id="admin-field-form" action={formAction} className="space-y-4">
           {mode === "edit" && field && (
             <input type="hidden" name="fieldId" value={field.id} />
           )}
@@ -554,28 +569,58 @@ export function FieldFormDialog({
               inferredCityLabel={inferredCityLabel ?? null}
             />
           </FieldGroup>
-
-          <DialogFooter>
-            <Button
-              type="submit"
-              disabled={
-                pending
-                || (mode === "create"
-                  && venues.length === 0
-                  && fixedVenueId == null)
-                || (mode === "create"
-                  && fixedVenueId != null
-                  && !fixedVenue)
-              }
-            >
-              {pending
-                ? "Guardando…"
-                : mode === "create"
-                  ? "Crear cancha"
-                  : "Guardar cambios"}
-            </Button>
-          </DialogFooter>
         </form>
+
+        <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {mode === "edit" && field ? (
+            <form
+              action={deleteAction}
+              className="w-full sm:w-auto"
+              onSubmit={(e) => {
+                if (
+                  !confirm(
+                    "¿Eliminar esta cancha de forma permanente? Solo es posible si no tiene ninguna reserva en el sistema.",
+                  )
+                ) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              <input type="hidden" name="fieldId" value={field.id} />
+              <Button
+                type="submit"
+                variant="destructive"
+                className="w-full sm:w-auto"
+                disabled={deletePending || pending}
+              >
+                {deletePending ? "Eliminando…" : "Eliminar cancha"}
+              </Button>
+            </form>
+          ) : (
+            <span className="hidden sm:block sm:flex-1" aria-hidden />
+          )}
+          <Button
+            type="submit"
+            form="admin-field-form"
+            className="w-full sm:w-auto"
+            disabled={
+              pending
+              || deletePending
+              || (mode === "create"
+                && venues.length === 0
+                && fixedVenueId == null)
+              || (mode === "create"
+                && fixedVenueId != null
+                && !fixedVenue)
+            }
+          >
+            {pending
+              ? "Guardando…"
+              : mode === "create"
+                ? "Crear cancha"
+                : "Guardar cambios"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

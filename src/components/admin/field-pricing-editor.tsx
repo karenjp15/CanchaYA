@@ -16,6 +16,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { PricingWindowRow } from "@/lib/field-pricing";
 import {
   dbWindowsToSpecialBands,
@@ -188,7 +195,7 @@ export function FieldPricingEditor({
         aria-hidden
       />
 
-      <Accordion defaultValue={["base"]} className="bg-card">
+      <Accordion defaultValue={["base"]} className="bg-card overflow-hidden">
         <AccordionItem value="base">
           <AccordionTrigger>
             Precio base y referencia de mercado
@@ -294,9 +301,9 @@ export function FieldPricingEditor({
               {specials.map((band, idx) => (
                 <div
                   key={band.id}
-                  className="rounded-lg border border-border bg-background p-3 space-y-3"
+                  className="space-y-3 rounded-lg border border-border bg-background p-3 sm:p-4"
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-xs font-medium text-muted-foreground">
                       Franja {idx + 1}
                     </span>
@@ -314,36 +321,46 @@ export function FieldPricingEditor({
                     </Button>
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <Field>
                       <FieldLabel className="text-xs">Días</FieldLabel>
-                      <select
-                        className={cn(
-                          "h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm",
-                        )}
+                      <Select
                         value={band.preset}
-                        onChange={(e) =>
+                        onValueChange={(v) =>
                           updateBand(band.id, {
-                            preset: e.target.value as DayPreset,
+                            preset: v as DayPreset,
                             customDays:
-                              e.target.value === "custom" ? band.customDays : [],
+                              v === "custom" ? band.customDays : [],
                           })
                         }
                       >
-                        {(Object.keys(PRESET_LABELS) as DayPreset[]).map(
-                          (k) => (
-                            <option key={k} value={k}>
-                              {PRESET_LABELS[k]}
-                            </option>
-                          ),
-                        )}
-                      </select>
+                        <SelectTrigger
+                          size="sm"
+                          className="h-8 w-full min-w-0 max-w-full justify-between font-normal"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent
+                          align="start"
+                          sideOffset={6}
+                          className="z-[100] max-h-[min(50vh,320px)] border-border shadow-lg"
+                        >
+                          {(Object.keys(PRESET_LABELS) as DayPreset[]).map(
+                            (k) => (
+                              <SelectItem key={k} value={k}>
+                                {PRESET_LABELS[k]}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
                     </Field>
                     <Field>
                       <FieldLabel className="text-xs">Precio / h (COP)</FieldLabel>
                       <Input
                         type="number"
                         min={0}
+                        inputMode="numeric"
                         value={band.price || ""}
                         onChange={(e) =>
                           updateBand(band.id, {
@@ -355,17 +372,17 @@ export function FieldPricingEditor({
                   </div>
 
                   {band.preset === "custom" ? (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {DOW_SHORT.map((label, dow) => (
                         <button
                           key={dow}
                           type="button"
                           onClick={() => toggleCustomDay(band.id, dow)}
                           className={cn(
-                            "rounded-md border px-2 py-1 text-[10px] font-medium transition-colors",
+                            "min-h-9 min-w-[2.5rem] touch-manipulation rounded-md border px-2 py-1.5 text-[11px] font-medium transition-colors sm:min-h-8 sm:min-w-0 sm:px-2.5 sm:text-xs",
                             band.customDays.includes(dow)
                               ? "border-primary bg-primary/15 text-primary"
-                              : "border-border text-muted-foreground hover:bg-muted",
+                              : "border-border bg-background text-muted-foreground hover:bg-muted",
                           )}
                         >
                           {label}
@@ -374,13 +391,14 @@ export function FieldPricingEditor({
                     </div>
                   ) : null}
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <Field>
                       <FieldLabel className="text-xs">Desde</FieldLabel>
                       <Input
                         type="time"
                         step={60}
                         value={band.start}
+                        className="dark:[color-scheme:dark]"
                         onChange={(e) =>
                           updateBand(band.id, { start: e.target.value })
                         }
@@ -392,6 +410,7 @@ export function FieldPricingEditor({
                         type="time"
                         step={60}
                         value={band.end}
+                        className="dark:[color-scheme:dark]"
                         onChange={(e) =>
                           updateBand(band.id, { end: e.target.value })
                         }

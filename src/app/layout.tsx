@@ -16,10 +16,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CanchaYa Bogotá",
-    template: "%s | CanchaYa Bogotá",
+    default: "CanchaYa",
+    template: "%s | CanchaYa",
   },
   description: "Reserva y gestión de canchas de fútbol en Bogotá.",
+  icons: {
+    icon: [{ url: "/brand/cancha-ya-logo.png", type: "image/png" }],
+    apple: [{ url: "/brand/cancha-ya-logo.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

@@ -5,7 +5,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { getResolvedHourlyPrice } from "@/actions/field-pricing";
+import { getResolvedHourlyPriceBreakdown } from "@/actions/field-pricing";
 import { fieldVenueName, type Field } from "@/lib/data/field-model";
 import { fieldSportDetailLine } from "@/lib/field-display";
 import { formatDateLong } from "@/lib/date-utils";
@@ -41,24 +41,35 @@ export function BookingDetailsPanel({
   const ready = selectedDate && selectedTime;
   const durationMin = field.slot_duration_minutes;
   const [hourly, setHourly] = useState(Number(field.hourly_price));
+  const [baseHourly, setBaseHourly] = useState<number | null>(null);
 
   useEffect(() => {
     if (!selectedTime) {
       setHourly(Number(field.hourly_price));
+      setBaseHourly(null);
       return;
     }
     let cancelled = false;
-    void getResolvedHourlyPrice(field.id, selectedTime).then((h) => {
-      if (!cancelled) {
-        setHourly(h > 0 ? h : Number(field.hourly_price));
-      }
-    });
+    void getResolvedHourlyPriceBreakdown(field.id, selectedTime).then(
+      ({ baseHourly: b, effectiveHourly: e }) => {
+        if (!cancelled) {
+          const eff = e > 0 ? e : Number(field.hourly_price);
+          const base = b > 0 ? b : Number(field.hourly_price);
+          setHourly(eff);
+          setBaseHourly(base !== eff ? base : null);
+        }
+      },
+    );
     return () => {
       cancelled = true;
     };
   }, [field.id, field.hourly_price, selectedTime]);
 
   const cost = totalPriceFromHourlyAndMinutes(hourly, durationMin);
+  const baseCost =
+    baseHourly != null
+      ? totalPriceFromHourlyAndMinutes(baseHourly, durationMin)
+      : null;
 
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -103,14 +114,34 @@ export function BookingDetailsPanel({
         </div>
         <div className="flex flex-col gap-0.5 border-t border-border pt-2 sm:flex-row sm:items-center sm:justify-between">
           <dt className="font-semibold">Precio final (real)</dt>
-          <dd className="font-bold text-warning sm:text-right">
-            {ready
-              ? new Intl.NumberFormat("es-CO", {
-                  style: "currency",
-                  currency: "COP",
-                  maximumFractionDigits: 0,
-                }).format(cost)
-              : "—"}
+          <dd className="text-right sm:text-right">
+            {ready ? (
+              <span className="flex flex-col items-end gap-0.5">
+                {baseCost != null ? (
+                  <span className="text-xs font-normal text-muted-foreground line-through">
+                    {new Intl.NumberFormat("es-CO", {
+                      style: "currency",
+                      currency: "COP",
+                      maximumFractionDigits: 0,
+                    }).format(baseCost)}
+                  </span>
+                ) : null}
+                <span className="font-bold text-warning">
+                  {new Intl.NumberFormat("es-CO", {
+                    style: "currency",
+                    currency: "COP",
+                    maximumFractionDigits: 0,
+                  }).format(cost)}
+                </span>
+                {baseCost != null ? (
+                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    Descuento por baja demanda aplicado
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              "—"
+            )}
           </dd>
         </div>
       </dl>

@@ -7,6 +7,7 @@ import { LogOut, LogIn, Sun, Moon } from "lucide-react";
 import { signOut } from "@/actions/sign-out";
 import { Button } from "@/components/ui/button";
 import { appShellClassName } from "@/lib/layout-classes";
+import { BrandMark } from "@/components/brand-mark";
 
 type AppHeaderProps = {
   user?: { name: string | null; email: string | null } | null;
@@ -37,9 +38,7 @@ export function AppHeader({ user }: AppHeaderProps) {
           href="/explorar?sport=FUTBOL"
           className="flex min-w-0 items-center gap-2 rounded-lg py-1 pr-2 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring md:hidden"
         >
-          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-warning text-sm font-bold text-primary-foreground shadow-sm">
-            C
-          </span>
+          <BrandMark size="sm" aria-hidden />
           <span className="truncate text-base font-semibold tracking-tight">
             CanchaYa
           </span>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Search, CalendarDays, User } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 
 const navItems = [
   { href: "/user/perfil", label: "Perfil", icon: User },
@@ -29,9 +30,10 @@ export function AppLeftNav() {
           href="/explorar?sport=FUTBOL"
           className="group flex items-center gap-3 rounded-xl p-2 -m-2 outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-warning text-base font-bold text-primary-foreground shadow-sm ring-1 ring-primary/20 transition-transform group-hover:scale-[1.02]">
-            C
-          </span>
+          <BrandMark
+            size="md"
+            className="rounded-xl ring-1 ring-border/40 transition-transform group-hover:scale-[1.02]"
+          />
           <div className="min-w-0 leading-tight">
             <span className="block font-semibold tracking-tight text-foreground">
               CanchaYa

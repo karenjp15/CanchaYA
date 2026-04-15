@@ -44,13 +44,15 @@ function AccordionTrigger({
     <Accordion.Header className="flex">
       <Accordion.Trigger
         className={cn(
-          "flex flex-1 items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium outline-none transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 data-panel-open:bg-muted/30",
+          "flex min-w-0 flex-1 items-start justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium outline-none transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 data-panel-open:bg-muted/30 sm:items-center",
           className,
         )}
         {...props}
       >
-        {children}
-        <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 data-panel-open:rotate-180" />
+        <span className="min-w-0 flex-1 text-balance pr-1 leading-snug">
+          {children}
+        </span>
+        <ChevronDownIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform duration-200 data-panel-open:rotate-180 sm:mt-0" />
       </Accordion.Trigger>
     </Accordion.Header>
   );
@@ -69,7 +71,7 @@ function AccordionContent({
       )}
       {...props}
     >
-      <div className="border-t border-border bg-muted/10 px-3 py-3">
+      <div className="border-t border-border bg-muted/10 px-3 py-3 sm:px-4">
         {children}
       </div>
     </Accordion.Panel>

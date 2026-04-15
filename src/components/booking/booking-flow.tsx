@@ -7,6 +7,8 @@ import { TimeSlotPicker } from "@/components/booking/time-slot-picker";
 import { BookingDetailsPanel } from "@/components/booking/booking-details-panel";
 import { generateTimeSlots, formatDateLong } from "@/lib/date-utils";
 import { getBookedIntervalsForField } from "@/actions/slots";
+import { loadFlashOffersForBookingDay } from "@/actions/booking-flash-offers";
+import { attachFlashDiscountsToSlots } from "@/lib/utils/pricing";
 import {
   fieldAddress,
   fieldVenueName,
@@ -21,9 +23,11 @@ import { MapPin, Car, Wine, Loader2 } from "lucide-react";
 export function BookingFlow({
   field,
   sport,
+  venueFlashTomorrow,
 }: {
   field: Field;
   sport?: SportType;
+  venueFlashTomorrow?: boolean;
 }) {
   const sportParam = sport ?? field.sport;
   const venue = fieldVenueName(field);
@@ -32,21 +36,53 @@ export function BookingFlow({
   const [booked, setBooked] = useState<{ start: string; end: string }[]>([]);
   const [loading, startTransition] = useTransition();
 
+  const [flashOffersState, setFlashOffersState] = useState<Awaited<
+    ReturnType<typeof loadFlashOffersForBookingDay>
+  > | null>(null);
+
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!selectedDate) {
+      setBooked([]);
+      setFlashOffersState(null);
+      return;
+    }
+    setBooked([]);
+    setFlashOffersState(null);
+    let cancelled = false;
     startTransition(async () => {
-      const intervals = await getBookedIntervalsForField(field.id, selectedDate);
+      const [intervals, offers] = await Promise.all([
+        getBookedIntervalsForField(field.id, selectedDate),
+        loadFlashOffersForBookingDay(field.id, selectedDate),
+      ]);
+      if (cancelled) return;
       setBooked(intervals);
+      setFlashOffersState(offers);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedDate, field.id]);
 
-  const slots = selectedDate
+  const rawSlots = selectedDate
     ? generateTimeSlots(
         selectedDate,
         booked,
         field.slot_duration_minutes,
       )
     : [];
+
+  const slots =
+    selectedDate && flashOffersState !== null
+      ? attachFlashDiscountsToSlots(
+          rawSlots,
+          field.id,
+          selectedDate,
+          flashOffersState,
+        )
+      : rawSlots;
+
+  const slotsGridReady =
+    Boolean(selectedDate) && !loading && flashOffersState !== null;
 
   function handleDateSelect(dateStr: string) {
     setSelectedDate(dateStr);
@@ -55,6 +91,16 @@ export function BookingFlow({
 
   return (
     <div className="space-y-6">
+      {venueFlashTomorrow ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-50"
+        >
+          <span aria-hidden>🔥</span> ¡Ofertas Relámpago disponibles para mañana!
+          Reserva ahora y ahorra.
+        </div>
+      ) : null}
+
       <nav className="text-sm text-muted-foreground">
         <Link
           href={`/explorar?sport=${sportParam}`}
@@ -146,7 +192,7 @@ export function BookingFlow({
 
         <div className="min-w-0 w-full">
           {selectedDate ? (
-            loading ? (
+            !slotsGridReady ? (
               <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border p-6">
                 <Loader2 className="size-5 animate-spin text-muted-foreground" />
               </div>

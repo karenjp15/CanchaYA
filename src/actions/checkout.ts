@@ -4,6 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { checkoutSchema } from "@/lib/schemas/checkout";
 import { fetchPricingWindowsForFields } from "@/lib/data/field-pricing-data";
 import { resolveHourlyPriceFromWindows } from "@/lib/field-pricing";
+import { fetchActiveFieldOffersForDate } from "@/lib/data/field-offers";
+import { toBogotaDateString } from "@/lib/date-utils";
+import {
+  bogotaHHmmFromIso,
+  calculateEffectivePrice,
+} from "@/lib/utils/pricing";
 import { redirect } from "next/navigation";
 
 export type CheckoutActionState = {
@@ -62,10 +68,24 @@ export async function processCheckout(
 
   const winMap = await fetchPricingWindowsForFields(supabase, [parsed.data.fieldId]);
   const windows = winMap.get(parsed.data.fieldId) ?? [];
-  const hourly = resolveHourlyPriceFromWindows(
+  const baseHourly = resolveHourlyPriceFromWindows(
     windows,
     parsed.data.startTime,
     Number(field.hourly_price),
+  );
+  const dateYmd = toBogotaDateString(new Date(parsed.data.startTime));
+  const offers = await fetchActiveFieldOffersForDate(
+    supabase,
+    parsed.data.fieldId,
+    dateYmd,
+  );
+  const timeHHmm = bogotaHHmmFromIso(parsed.data.startTime);
+  const hourly = calculateEffectivePrice(
+    baseHourly,
+    parsed.data.fieldId,
+    dateYmd,
+    timeHHmm,
+    offers,
   );
   const hours = durationMin / 60;
   const totalPrice = hourly * hours;

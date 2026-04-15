@@ -24,6 +24,9 @@ type CheckoutFormProps = {
   startTime: string;
   endTime: string;
   totalPrice: number;
+  /** Precio sin descuento relámpago (solo si aplica oferta). */
+  baseTotal?: number;
+  flashOfferApplied?: boolean;
 };
 
 const ID_TYPES = [
@@ -46,6 +49,8 @@ export function CheckoutForm({
   startTime,
   endTime,
   totalPrice,
+  baseTotal,
+  flashOfferApplied,
 }: CheckoutFormProps) {
   const [state, formAction, pending] = useActionState(processCheckout, initial);
 
@@ -200,14 +205,37 @@ export function CheckoutForm({
                 })}
               </dd>
             </div>
-            <div className="flex flex-col gap-1 border-t border-border pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1 border-t border-border pt-2 sm:flex-row sm:items-start sm:justify-between">
               <dt className="font-semibold">Total</dt>
-              <dd className="text-lg font-bold text-warning sm:text-right">
-                {new Intl.NumberFormat("es-CO", {
-                  style: "currency",
-                  currency: "COP",
-                  maximumFractionDigits: 0,
-                }).format(totalPrice)}
+              <dd className="flex flex-col items-end gap-1 sm:text-right">
+                {flashOfferApplied && baseTotal != null ? (
+                  <span className="text-sm font-medium text-muted-foreground line-through">
+                    {new Intl.NumberFormat("es-CO", {
+                      style: "currency",
+                      currency: "COP",
+                      maximumFractionDigits: 0,
+                    }).format(baseTotal)}
+                  </span>
+                ) : null}
+                <span
+                  className={cn(
+                    "text-lg font-bold",
+                    flashOfferApplied
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-warning",
+                  )}
+                >
+                  {new Intl.NumberFormat("es-CO", {
+                    style: "currency",
+                    currency: "COP",
+                    maximumFractionDigits: 0,
+                  }).format(totalPrice)}
+                </span>
+                {flashOfferApplied ? (
+                  <span className="text-[11px] font-medium text-emerald-700/90 dark:text-emerald-400/90">
+                    Descuento por baja demanda aplicado
+                  </span>
+                ) : null}
               </dd>
             </div>
           </dl>

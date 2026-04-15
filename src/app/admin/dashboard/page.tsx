@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { DashboardOpportunitySlot } from "@/components/admin/dashboard-opportunity-slot";
+import { OpportunityCardSkeleton } from "@/components/admin/opportunity-card";
 import { MetricsCards } from "@/components/admin/metrics-cards";
 import { TimeGrid } from "@/components/admin/time-grid";
 import { DashboardVenueFilter } from "@/components/admin/dashboard-venue-filter";
@@ -46,6 +48,10 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
           <DashboardVenueFilter venues={venues} selectedVenueId={venueId} />
         </Suspense>
       </div>
+
+      <Suspense fallback={<OpportunityCardSkeleton />}>
+        <DashboardOpportunitySlot ownerId={profile.id} venueId={venueId} />
+      </Suspense>
 
       <MetricsCards metrics={metrics} />
 

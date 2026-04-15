@@ -1,8 +1,16 @@
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { fieldBookingSummaryLine } from "@/lib/data/field-model";
 import { getFieldById } from "@/lib/data/fields";
+import { createClient } from "@/lib/supabase/server";
+import { fetchPricingWindowsForFields } from "@/lib/data/field-pricing-data";
+import { fetchActiveFieldOffersForDate } from "@/lib/data/field-offers";
 import { resolveHourlyPriceFromWindows } from "@/lib/field-pricing";
 import { totalPriceFromHourlyAndMinutes } from "@/lib/pricing";
+import { toBogotaDateString } from "@/lib/date-utils";
+import {
+  bogotaHHmmFromIso,
+  calculateEffectivePrice,
+} from "@/lib/utils/pricing";
 import { redirect } from "next/navigation";
 import type { SportType } from "@/types/database.types";
 
@@ -30,12 +38,36 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const endDate = new Date(startDate.getTime() + durationMin * 60_000);
   const endTime = endDate.toISOString();
 
-  const hourly = resolveHourlyPriceFromWindows(
-    field.pricing_windows ?? [],
+  const supabase = await createClient();
+  const winMap = await fetchPricingWindowsForFields(supabase, [field.id]);
+  const windows = winMap.get(field.id) ?? field.pricing_windows ?? [];
+
+  const baseHourly = resolveHourlyPriceFromWindows(
+    windows,
     startTime,
     Number(field.hourly_price),
   );
-  const totalPrice = totalPriceFromHourlyAndMinutes(hourly, durationMin);
+  const dateYmd = toBogotaDateString(new Date(startTime));
+  const offers = await fetchActiveFieldOffersForDate(
+    supabase,
+    field.id,
+    dateYmd,
+  );
+  const timeHHmm = bogotaHHmmFromIso(startTime);
+  const effectiveHourly = calculateEffectivePrice(
+    baseHourly,
+    field.id,
+    dateYmd,
+    timeHHmm,
+    offers,
+  );
+
+  const baseTotal = totalPriceFromHourlyAndMinutes(baseHourly, durationMin);
+  const totalPrice = totalPriceFromHourlyAndMinutes(
+    effectiveHourly,
+    durationMin,
+  );
+  const flashApplied = baseTotal > totalPrice + 0.01;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
@@ -74,6 +106,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
         startTime={startTime}
         endTime={endTime}
         totalPrice={totalPrice}
+        baseTotal={flashApplied ? baseTotal : undefined}
+        flashOfferApplied={flashApplied}
       />
     </div>
   );

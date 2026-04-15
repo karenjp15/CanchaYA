@@ -2,8 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import {
   addDaysToInstantISO,
   getMondayOfWeekBogotaISO,
+  nextBogotaDateString,
   toBogotaDateString,
 } from "@/lib/date-utils";
+import {
+  BOOKING_SLOT_DAY_END_HOUR,
+  BOOKING_SLOT_DAY_START_HOUR,
+} from "@/lib/constants";
 import type { BookingStatus } from "@/types/database.types";
 
 export type AdminMetrics = {
@@ -414,6 +419,115 @@ export async function getAdminClients(
       } satisfies AdminClient;
     })
     .sort((a, b) => b.reservas - a.reservas);
+}
+
+/** Última hora de inicio de slot (el slot termina a BOOKING_SLOT_DAY_END_HOUR). */
+const OP_LAST_START_HOUR = BOOKING_SLOT_DAY_END_HOUR - 1;
+
+export type LowDemandOpportunity = {
+  periodLabel: "Mañana" | "Tarde" | "Noche";
+  rangeStartHour: number;
+  rangeEndExclusive: number;
+  displayRange: string;
+  /** Mañana en calendario Bogotá (YYYY-MM-DD) donde aplica la ventana detectada. */
+  offerDateYmd: string;
+  /** Canchas del dueño (opcionalmente filtradas por venue) para publicar la oferta. */
+  fieldIds: string[];
+};
+
+function padHour(h: number): string {
+  return String(h).padStart(2, "0");
+}
+
+function periodLabelFromHour(h: number): "Mañana" | "Tarde" | "Noche" {
+  if (h < 12) return "Mañana";
+  if (h < 18) return "Tarde";
+  return "Noche";
+}
+
+/**
+ * Detecta si mañana (Bogotá) hay ≥3 horas seguidas sin reservas PAID/PENDING
+ * en el horario operativo, sobre las canchas del dueño (opcionalmente filtradas por venue).
+ */
+export async function getLowDemandOpportunities(
+  ownerId: string,
+  venueId: string | null | undefined,
+): Promise<LowDemandOpportunity | null> {
+  const supabase = await createClient();
+
+  let fq = supabase.from("fields").select("id").eq("owner_id", ownerId);
+  if (venueId) fq = fq.eq("venue_id", venueId);
+  const { data: fieldRows, error: fe } = await fq;
+  if (fe) throw new Error(fe.message);
+
+  const ids = (fieldRows ?? []).map((r) => r.id);
+  if (ids.length === 0) return null;
+
+  const todayYmd = toBogotaDateString(new Date());
+  const tomorrowYmd = nextBogotaDateString(todayYmd);
+  const dayAfterYmd = nextBogotaDateString(tomorrowYmd);
+
+  const tomorrowStart = `${tomorrowYmd}T00:00:00-05:00`;
+  const tomorrowEndExcl = `${dayAfterYmd}T00:00:00-05:00`;
+
+  const { data: bookings, error: be } = await supabase
+    .from("bookings")
+    .select("start_time, end_time")
+    .in("field_id", ids)
+    .in("status", ["PENDING", "PAID"])
+    .lt("start_time", tomorrowEndExcl)
+    .gt("end_time", tomorrowStart);
+
+  if (be) throw new Error(be.message);
+
+  const busy = new Set<number>();
+  for (const b of bookings ?? []) {
+    const bs = new Date(b.start_time as string).getTime();
+    const beMs = new Date(b.end_time as string).getTime();
+    for (let h = BOOKING_SLOT_DAY_START_HOUR; h <= OP_LAST_START_HOUR; h++) {
+      const hs = new Date(
+        `${tomorrowYmd}T${padHour(h)}:00:00-05:00`,
+      ).getTime();
+      const he = hs + 60 * 60 * 1000;
+      if (bs < he && beMs > hs) busy.add(h);
+    }
+  }
+
+  let best: { start: number; len: number } | null = null;
+  let runStart = -1;
+  let runLen = 0;
+
+  for (let h = BOOKING_SLOT_DAY_START_HOUR; h <= OP_LAST_START_HOUR; h++) {
+    const free = !busy.has(h);
+    if (free) {
+      if (runStart < 0) runStart = h;
+      runLen++;
+    } else {
+      if (runLen >= 3 && (!best || runLen > best.len)) {
+        best = { start: runStart, len: runLen };
+      }
+      runStart = -1;
+      runLen = 0;
+    }
+  }
+  if (runLen >= 3 && (!best || runLen > best.len)) {
+    best = { start: runStart, len: runLen };
+  }
+
+  if (!best) return null;
+
+  const rangeStartHour = best.start;
+  const rangeEndExclusive = best.start + best.len;
+  const displayRange = `${padHour(rangeStartHour)}:00 a ${padHour(rangeEndExclusive)}:00`;
+
+  return {
+    periodLabel: periodLabelFromHour(rangeStartHour),
+    rangeStartHour,
+    rangeEndExclusive,
+    displayRange,
+    offerDateYmd: tomorrowYmd,
+    fieldIds: ids,
+  };
 }
 
 export function getMondayOfCurrentWeek(): string {

@@ -252,6 +252,50 @@ export type Database = {
           },
         ];
       };
+      field_offers: {
+        Row: {
+          id: string;
+          field_id: string;
+          date: string;
+          start_time: string;
+          end_time: string;
+          discount_percentage: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          field_id: string;
+          date: string;
+          start_time: string;
+          end_time: string;
+          discount_percentage: string | number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          field_id?: string;
+          date?: string;
+          start_time?: string;
+          end_time?: string;
+          discount_percentage?: string | number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "field_offers_field_id_fkey";
+            columns: ["field_id"];
+            isOneToOne: false;
+            referencedRelation: "fields";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       bookings: {
         Row: {
           id: string;
